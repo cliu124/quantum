@@ -28,7 +28,7 @@ Hamil[2, 0] = c1
 Hamil[2, 1] = c1
 
 #construct a Hermitian matrix
-#Hamil_real = np.random.randn((n,n))
+Hamil = np.random.randn((n,n))
 #Hamil_imag = np.random.randn((n,n))
 Hamil = Hamil + np.transpose(Hamil)
 
