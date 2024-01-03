@@ -34,6 +34,10 @@ classical_results = solver.compute_eigenvalues(Hamil_Mat)
 print("Qubit Op Eigenvalues: ")
 print(classical_results.eigenvalues)
 
+eigenvalues,eigenvectors=np.linalg.eig(Hamil)
+print("Eigenvalues from numpy:")
+print(eigenvalues)
+
 # Create a unitary operator from the hamiltonian matrix
 Hamil_Qop = SparsePauliOp.from_operator(Hamil_Mat)
 print(Hamil_Qop)
