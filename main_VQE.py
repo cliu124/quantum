@@ -4,7 +4,7 @@ from qiskit.quantum_info.operators import Operator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit.library import TwoLocal
 from qiskit.primitives import Sampler, Estimator
-from qiskit.algorithms.state_fidelities import ComputeUncompute
+from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit import Aer
 
 backend = Aer.get_backend("qasm_simulator")
