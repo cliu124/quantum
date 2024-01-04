@@ -67,7 +67,7 @@ optimizer = optimizers.SLSQP()
 ansatz.decompose().draw("mpl")
 
 estimator = Estimator(backend=backend)
-sampler = Sampler()
+sampler = Sampler(backend=backend)
 fidelity = ComputeUncompute(sampler)
 counts = []
 values = []
