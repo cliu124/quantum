@@ -8,16 +8,13 @@ from qiskit.circuit.library import EfficientSU2
 from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit import Aer
-from qiskit import IBMQ
+from qiskit_ibm_runtime import QiskitRuntimeService
 ###simulator
 #backend = Aer.get_backend("qasm_simulator")
 
-
-IBMQ.save_account('3e240c42418c07b80ef72d580d6074ef560da4546167a9d2ad9591c0f845526e71e03f2d0fa393a5302212d30b77e406e744cc55bd7e4e22670f095d1f8791d0')
-IBMQ.load_account()
-## Define backend
-provider = IBMQ.get_provider(hub='ibm-q')
-backend = provider.get_backend('ibmq_bogota')
+QiskitRuntimeService.save_account(channel="ibm_quantum", token="3e240c42418c07b80ef72d580d6074ef560da4546167a9d2ad9591c0f845526e71e03f2d0fa393a5302212d30b77e406e744cc55bd7e4e22670f095d1f8791d0")
+service = QiskitRuntimeService()
+backend = service.get_backend('ibmq_qasm_simulator')
 
 # c1 = -0.5
 # c2 = 0.75
