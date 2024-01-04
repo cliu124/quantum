@@ -66,7 +66,7 @@ ansatz = EfficientSU2(Hamil_Qop.num_qubits)
 optimizer = optimizers.SLSQP()
 ansatz.decompose().draw("mpl")
 
-estimator = Estimator()
+estimator = Estimator(backend=backend)
 sampler = Sampler()
 fidelity = ComputeUncompute(sampler)
 counts = []
