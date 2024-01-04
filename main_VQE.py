@@ -1,5 +1,5 @@
 import numpy as np
-from qiskit_algorithms import VQD, NumPyEigensolver, optimizers
+from qiskit_algorithms import VQE, VQD, NumPyEigensolver, optimizers
 from qiskit.quantum_info.operators import Operator
 from qiskit.quantum_info import SparsePauliOp
 #from qiskit.circuit.library import TwoLocal
@@ -72,8 +72,14 @@ def callback(eval_count, params, value, meta, step):
 
 
 # Create a circuit that uses this operator as a unitary circuit element
-vqd = VQD(estimator, fidelity, ansatz, optimizer, k=n,callback=callback)
+vqd = VQD(estimator, fidelity, ansatz, optimizer, k=1,callback=callback)
 result = vqd.compute_eigenvalues(operator = Hamil_Qop)
 vqd_values = result.eigenvalues
+print('VQD')
 print(vqd_values)
 
+# Create a circuit for VQE computation
+vqe = VQE(estimator, ansatz, optimizer)
+vqe_values = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
+print('VQE')
+print(vqe_values)
