@@ -5,10 +5,10 @@ from qiskit.quantum_info import SparsePauliOp
 #from qiskit.circuit.library import TwoLocal
 #from qiskit.circuit.library import NLocal
 from qiskit.circuit.library import EfficientSU2
-from qiskit.primitives import Sampler, Estimator
+#from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit import Aer
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService, Estimator, Sampler
 ###simulator
 #backend = Aer.get_backend("qasm_simulator")
 
