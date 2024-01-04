@@ -8,24 +8,33 @@ from qiskit.circuit.library import EfficientSU2
 from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit import Aer
+from qiskit import IBMQ
+###simulator
+#backend = Aer.get_backend("qasm_simulator")
 
-backend = Aer.get_backend("qasm_simulator")
 
-c1 = -0.5
-c2 = 0.75
-c3 = 2
+IBMQ.save_account('3e240c42418c07b80ef72d580d6074ef560da4546167a9d2ad9591c0f845526e71e03f2d0fa393a5302212d30b77e406e744cc55bd7e4e22670f095d1f8791d0')
+IBMQ.load_account()
+## Define backend
+provider = IBMQ.get_provider(hub='ibm-q')
+backend = provider.get_backend('ibmq_bogota')
 
-n1 = 3
+# c1 = -0.5
+# c2 = 0.75
+# c3 = 2
 
+# n1 = 3
+
+
+# Hamil = np.zeros((n, n))
+# Hamil[1, 1] = c2
+# Hamil[2, 2] = -c3 / 2 + c2
+# Hamil[0, 2] = c1
+# Hamil[1, 2] = c1
+# Hamil[2, 0] = c1
+# Hamil[2, 1] = c1
 
 n = 4
-Hamil = np.zeros((n, n))
-Hamil[1, 1] = c2
-Hamil[2, 2] = -c3 / 2 + c2
-Hamil[0, 2] = c1
-Hamil[1, 2] = c1
-Hamil[2, 0] = c1
-Hamil[2, 1] = c1
 
 #construct a Hermitian matrix
 Hamil_real = np.random.randn(n,n)
@@ -70,26 +79,26 @@ def callback(eval_count, params, value, meta, step):
     values.append(value)
     steps.append(step)
 
+# #Print these to test. 
+# print('estimator')
+# print(estimator)
 
-print('estimator')
-print(estimator)
+# print('ansatz')
+# print(ansatz)
 
-print('ansatz')
-print(ansatz)
+# print('optimizer')
+# print(optimizer)
 
-print('optimizer')
-print(optimizer)
-
-# Create a circuit that uses this operator as a unitary circuit element
-vqd = VQD(estimator, fidelity, ansatz, optimizer, k=1,callback=callback)
-vqd_result = vqd.compute_eigenvalues(operator = Hamil_Qop)
-vqd_values = vqd_result.eigenvalues
-print('VQD')
-print(vqd_values)
-print(vqd_result)
+# # Create a circuit that uses this operator as a unitary circuit element
+# vqd = VQD(estimator, fidelity, ansatz, optimizer, k=1,callback=callback)
+# vqd_result = vqd.compute_eigenvalues(operator = Hamil_Qop)
+# vqd_values = vqd_result.eigenvalues
+# print('VQD')
+# print(vqd_values)
+# print(vqd_result)
 
 # Create a circuit for VQE computation
-vqe = VQE(estimator, ansatz, optimizer)
+vqe = VQE(estimator, ansatz, optimizer, quantum_instance=backend)
 vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
 vqe_values = vqe_result.eigenvalue
 print('VQE')
