@@ -73,13 +73,14 @@ def callback(eval_count, params, value, meta, step):
 
 # Create a circuit that uses this operator as a unitary circuit element
 vqd = VQD(estimator, fidelity, ansatz, optimizer, k=1,callback=callback)
-result = vqd.compute_eigenvalues(operator = Hamil_Qop)
-vqd_values = result.eigenvalues
+vqd_result = vqd.compute_eigenvalues(operator = Hamil_Qop)
+vqd_values = vqd_result.eigenvalues
 print('VQD')
 print(vqd_values)
 
 # Create a circuit for VQE computation
 vqe = VQE(estimator, ansatz, optimizer)
-vqe_values = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
+vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
+vqe_values = vqe_result.eigenvalue
 print('VQE')
 print(vqe_values)
