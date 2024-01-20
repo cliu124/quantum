@@ -1,6 +1,6 @@
 import numpy as np
-from qiskit_algorithms import VQE, VQD, NumPyEigensolver, optimizers, TimeEvolutionProblem, VarQITE, SciPyImaginaryEvolver
-from qiskit_algorithms.time_evolvers.variational import ImaginaryMcLachlanPrinciple
+from qiskit_algorithms import VQE, VQD, NumPyEigensolver, optimizers, TimeEvolutionProblem, VarQITE, SciPyImaginaryEvolver, VarQRTE, SciPyRealEvolver
+from qiskit_algorithms.time_evolvers.variational import ImaginaryMcLachlanPrinciple, RealMcLachlanPrinciple
 from qiskit.quantum_info.operators import Operator
 from qiskit.quantum_info import SparsePauliOp, Statevector
 #from qiskit.circuit.library import TwoLocal
@@ -44,17 +44,7 @@ Hamil_imag = np.random.randn(n,n)
 Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hamil_imag))
 magnetization = SparsePauliOp([ 'IZ', 'ZI'], coeffs=[1, 1])
 
-print("(4x4) Hamiltonian")
-print(Hamil)
-solver = NumPyEigensolver(k=n)
 Hamil_Mat = Operator(Hamil, n)
-classical_results = solver.compute_eigenvalues(Hamil_Mat)
-print("Qubit Op Eigenvalues: ")
-print(classical_results.eigenvalues)
-
-eigenvalues,eigenvectors=np.linalg.eig(Hamil)
-print("Eigenvalues from numpy:")
-print(eigenvalues)
 
 # Create a unitary operator from the hamiltonian matrix
 Hamil_Qop = SparsePauliOp.from_operator(Hamil_Mat)
@@ -83,6 +73,7 @@ aux_ops = [Hamil_Qop]
 evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, aux_operators=aux_ops)
 
 #main code of VarQITE
+print('start running VarQITE')
 var_qite = VarQITE(ansatz, init_param_values, var_principle, Estimator())
 # an Estimator instance is necessary, if we want to calculate the expectation value of auxiliary operators.
 evolution_result = var_qite.evolve(evolution_problem)
@@ -96,4 +87,32 @@ sol = exact_evol.evolve(evolution_problem)
 h_exp_val = np.array([ele[0][0] for ele in evolution_result.observables])
 exact_h_exp_val = sol.observables[0][0].real
 
+print('error between VarQITE and exact solutions:')
 print(h_exp_val-exact_h_exp_val)
+
+
+print('start running VarQRTE')
+var_principle = RealMcLachlanPrinciple()
+
+init_state = Statevector(ansatz.assign_parameters(init_param_values))
+print(init_state)
+
+aux_ops = [magnetization]
+time = 10.0
+
+#running VarQRTE
+print('start VarQRTE')
+evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, aux_operators=aux_ops)
+var_qrte = VarQRTE(ansatz, init_param_values,var_principle, Estimator())
+evolution_result_re = var_qrte.evolve(evolution_problem)
+
+#Solution on classical computer
+init_circ = ansatz.assign_parameters(init_param_values)
+evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, initial_state = init_circ, aux_operators=aux_ops)
+rtev = SciPyRealEvolver(1001)
+sol = rtev.evolve(evolution_problem)
+
+#get results and compare
+mz_exp_val_re = np.array([ele[0][0] for ele in evolution_result_re.observables])
+exact_mz_exp_val_re = sol.observables[0][0].real
+print(mz_exp_val_re-exact_mz_exp_val_re)
