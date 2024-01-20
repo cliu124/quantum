@@ -97,7 +97,7 @@ var_principle = RealMcLachlanPrinciple()
 init_state = Statevector(ansatz.assign_parameters(init_param_values))
 print(init_state)
 
-aux_ops = [magnetization]
+aux_ops = [Hamil_Qop] #in the tutorial this is magnetization, but do not match the size if I change qubit number
 time = 10.0
 
 #running VarQRTE
