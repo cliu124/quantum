@@ -1,0 +1,27 @@
+#!/bin/bash
+###SBATCH --partition=general # This can run up to 12 hours
+###SBATCH --partition=lo-core # This can be as long as 7 days
+#SBATCH --partition=priority # This can run infinite time with priority in queue
+#SBATCH --account=chl23026
+#SBATCH --qos=chl23026
+#SBATCH --constraint=epyc128 # This is optional
+#SBATCH --nodes=1
+#SBATCH --ntasks=126
+#SBATCH --time=00:10:00
+#SBATCH --job-name=dedalus
+#SBATCH --output=quantum_output_%j
+export SLURM_EXPORT_ENV=ALL
+#export I_MPI_FABRICS=shm,tcp
+
+##the slurm number to restart simulation... This need full state to be stored.
+SUBMITDIR=$SLURM_SUBMIT_DIR
+WORKDIR=/scratch/chl23026/chl23026/quantum_$SLURM_JOB_ID
+mkdir -p "$WORKDIR" && cp -r main_VQ*.py "$WORKDIR" && cp submit_quantum_uconn "$WORKDIR" && cd "$WORKDIR" || exit -1
+
+conda activate qiskit
+
+python3 -1 main_VQE_simulator.py
+
+cd "$SUBMITDIR" && cp quantum_output_$SLURM_JOB_ID "$WORKDIR"
+
+
