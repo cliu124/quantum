@@ -1,4 +1,5 @@
 #!/bin/bash
+###SBATCH --partition=debug # This is for debug node
 ###SBATCH --partition=general # This can run up to 12 hours
 ###SBATCH --partition=lo-core # This can be as long as 7 days
 #SBATCH --partition=priority # This can run infinite time with priority in queue
@@ -6,9 +7,9 @@
 #SBATCH --qos=chl23026
 #SBATCH --constraint=epyc128 # This is optional
 #SBATCH --nodes=1
-#SBATCH --ntasks=126
+#SBATCH --ntasks=1
 #SBATCH --time=00:10:00
-#SBATCH --job-name=dedalus
+#SBATCH --job-name=quantum
 #SBATCH --output=quantum_output_%j
 export SLURM_EXPORT_ENV=ALL
 #export I_MPI_FABRICS=shm,tcp
