@@ -11,6 +11,7 @@
 #SBATCH --time=00:10:00
 #SBATCH --job-name=quantum
 #SBATCH --output=quantum_output_%j
+#SBATCH --no-requeue
 export SLURM_EXPORT_ENV=ALL
 #export I_MPI_FABRICS=shm,tcp
 
@@ -21,7 +22,7 @@ mkdir -p "$WORKDIR" && cp -r main_VQ*.py "$WORKDIR" && cp submit_quantum_uconn "
 
 conda activate qiskit
 
-python3 -1 main_VQE_simulator.py
+python3 main_VQE_simulator.py
 
 cd "$SUBMITDIR" && cp quantum_output_$SLURM_JOB_ID "$WORKDIR"
 
