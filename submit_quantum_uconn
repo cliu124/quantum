@@ -1,11 +1,11 @@
 #!/bin/bash
 ###SBATCH --partition=debug # This is for debug node
-###SBATCH --partition=general # This can run up to 12 hours
+#SBATCH --partition=general # This can run up to 12 hours
 ###SBATCH --partition=lo-core # This can be as long as 7 days
-#SBATCH --partition=priority # This can run infinite time with priority in queue
-#SBATCH --account=chl23026
-#SBATCH --qos=chl23026
-#SBATCH --constraint=epyc128 # This is optional
+###SBATCH --partition=priority # This can run infinite time with priority in queue
+###SBATCH --account=chl23026
+###SBATCH --qos=chl23026
+###SBATCH --constraint=epyc128 # This is optional
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --time=00:10:00
@@ -20,6 +20,8 @@ SUBMITDIR=$SLURM_SUBMIT_DIR
 WORKDIR=/scratch/chl23026/chl23026/quantum_$SLURM_JOB_ID
 mkdir -p "$WORKDIR" && cp -r main_VQ*.py "$WORKDIR" && cp submit_quantum_uconn "$WORKDIR" && cd "$WORKDIR" || exit -1
 
+module unload gcc
+module load python/3.12.1
 conda activate qiskit
 
 python3 main_VQE_simulator.py
