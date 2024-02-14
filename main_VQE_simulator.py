@@ -37,11 +37,12 @@ print(backend.name)
 # Hamil[2, 1] = c1
 
 ###Below is the random Hermitian matrix
-n = 4
+n = 2 #number of qubits
+N = 2**n #number of matrix size
 
 #construct a Hermitian matrix
-#Hamil_real = np.random.randn(n,n)
-#Hamil_imag = np.random.randn(n,n)
+#Hamil_real = np.random.randn(N,N)
+#Hamil_imag = np.random.randn(N,N)
 #Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hamil_imag))
 
 #------------------- generate matrix from Rayleigh Benard convection
@@ -49,35 +50,24 @@ Pr=1
 Ra=1708
 kx=2*np.pi/2.016
 ky=0
-print('kx')
-print(kx)
-print('ky')
-print(ky)
 #Construct matrix from Rayleigh Benard convection
-ncheb=int(n/2)
+ncheb=int(N/2)
 ddm = Chebyshev(degree=ncheb + 1).at_order(2)
    # Enforce Dirichlet BCs
 dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
 xxt, dd4 = cheb4c(ncheb + 1)
 D2=dd2*4
 D4=dd4*16
-print('D4')
-print(D4)
 I = np.eye(dd4.shape[0])
 Laplacian=D2-(kx**2+ky**2)*I
 inv_Laplacian=np.linalg.inv(Laplacian)
-print('inv_Laplacian')
-print(inv_Laplacian)
 
 Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
-print('Laplacian_square')
-print(Laplacian_square)
+
 A11=Pr*inv_Laplacian*Laplacian_square
-print('A11')
-print(A11)
+
 A12=-(kx**2+ky**2)*inv_Laplacian*Pr*Ra
-print('A12')
-print(A12)
+
 A11_12=np.concatenate((A11, A12) ,axis=1)
 A21_22=np.concatenate((I, Laplacian),axis=1)
 Hamil=-np.concatenate([A11_12,A21_22],axis=0)
@@ -90,8 +80,8 @@ Hamil=-np.concatenate([A11_12,A21_22],axis=0)
 
 print("(4x4) Hamiltonian")
 print(Hamil)
-solver = NumPyEigensolver(k=n)
-Hamil_Mat = Operator(Hamil, n)
+solver = NumPyEigensolver(k=N)
+Hamil_Mat = Operator(Hamil, N)
 classical_results = solver.compute_eigenvalues(Hamil_Mat)
 print("Qubit Op Eigenvalues: ")
 print(classical_results.eigenvalues)
