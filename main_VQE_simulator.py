@@ -10,8 +10,8 @@ from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-from .cheb_bc import cheb4c
-from .poly_diff import Chebyshev
+from poly_diff import cheb4c
+from poly_diff import Chebyshev
 ###simulator
 backend = Aer.get_backend("qasm_simulator")
 
