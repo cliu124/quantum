@@ -9,6 +9,9 @@ from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService
+
+from .cheb_bc import cheb4c
+from .poly_diff import Chebyshev
 ###simulator
 backend = Aer.get_backend("qasm_simulator")
 
@@ -33,12 +36,41 @@ print(backend.name)
 # Hamil[2, 0] = c1
 # Hamil[2, 1] = c1
 
+###Below is the random Hermitian matrix
 n = 4
 
 #construct a Hermitian matrix
-Hamil_real = np.random.randn(n,n)
-Hamil_imag = np.random.randn(n,n)
-Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hamil_imag))
+#Hamil_real = np.random.randn(n,n)
+#Hamil_imag = np.random.randn(n,n)
+#Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hamil_imag))
+
+#------------------- generate matrix from Rayleigh Benard convection
+Pr=1
+Ra=1708
+kx=2*np.pi/2.016
+ky=0
+#Construct matrix from Rayleigh Benard convection
+ncheb=n
+ddm = Chebyshev(degree=ncheb + 2).at_order(2)
+   # Enforce Dirichlet BCs
+dd2 = ddm[1 : ncheb + 2, 1 : ncheb + 2]
+xxt, dd4 = cheb4c(ncheb + 2)
+D2=dd2*2**2
+D4=dd4*2**4
+I = np.eye(dd4.shape[0])
+Laplacian=D2-(kx^2+ky^2)*I
+inv_Laplacian=np.linalg.inv(Laplacian)
+Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
+
+Hamil=[[Pr*inv_Laplacian*Laplacian_square, inv_Laplacian*Pr*Ra*(-(kx**2+ky**2))],
+       [I, Laplacian]];
+
+
+#--------------------------
+
+
+###Below is the matrix from Rayleigh-Benard convection, it is normal matrix but not Hermitian
+
 
 print("(4x4) Hamiltonian")
 print(Hamil)
