@@ -65,6 +65,7 @@ print(inv_Laplacian)
 Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
 print('Laplacian_square')
 print(Laplacian_square)
+print(inv_Laplacian*Laplacian_square)
 A11=Pr*inv_Laplacian*Laplacian_square
 
 A12=-(kx**2+ky**2)*inv_Laplacian*Pr*Ra
