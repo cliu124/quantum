@@ -49,6 +49,10 @@ Pr=1
 Ra=1708
 kx=2*np.pi/2.016
 ky=0
+print('kx')
+print(kx)
+print('ky')
+print(ky)
 #Construct matrix from Rayleigh Benard convection
 ncheb=int(n/2)
 ddm = Chebyshev(degree=ncheb + 1).at_order(2)
