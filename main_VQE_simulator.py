@@ -85,7 +85,8 @@ print(classical_results.eigenvalues)
 eigenvalues,eigenvectors=np.linalg.eig(Hamil)
 print("Eigenvalues from numpy:")
 print(eigenvalues)
-
+print("Minimal Eigenvalue from numpy:")
+print(np.min(eigenvalues))
 # Create a unitary operator from the hamiltonian matrix
 Hamil_Qop = SparsePauliOp.from_operator(Hamil_Mat)
 print(Hamil_Qop)
