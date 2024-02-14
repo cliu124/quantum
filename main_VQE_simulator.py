@@ -57,15 +57,25 @@ dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
 xxt, dd4 = cheb4c(ncheb + 1)
 D2=dd2*2**2
 D4=dd4*2**4
+print('D4')
+print(D4)
 I = np.eye(dd4.shape[0])
 Laplacian=D2-(kx**2+ky**2)*I
 inv_Laplacian=np.linalg.inv(Laplacian)
-Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
+print('inv_Laplacian')
+print(inv_Laplacian)
 
-A11_12=np.concatenate((Pr*inv_Laplacian*Laplacian_square, -(kx**2+ky**2)*inv_Laplacian*Pr*Ra ) ,axis=1)
+Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
+print('Laplacian_square')
+print(Laplacian_square)
+A11=Pr*inv_Laplacian*Laplacian_square
+print('A11')
+print(A11)
+A12=-(kx**2+ky**2)*inv_Laplacian*Pr*Ra
+print('A12')
+print(A12)
+A11_12=np.concatenate((A11, A12) ,axis=1)
 A21_22=np.concatenate((I, Laplacian),axis=1)
-print(A11_12)
-print(A21_22)
 Hamil=-np.concatenate([A11_12,A21_22],axis=0)
 
 #--------------------------
