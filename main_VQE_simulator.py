@@ -55,8 +55,8 @@ ddm = Chebyshev(degree=ncheb + 1).at_order(2)
    # Enforce Dirichlet BCs
 dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
 xxt, dd4 = cheb4c(ncheb + 1)
-D2=dd2*2**2
-D4=dd4*2**4
+D2=dd2*4
+D4=dd4*16
 print('D4')
 print(D4)
 I = np.eye(dd4.shape[0])
