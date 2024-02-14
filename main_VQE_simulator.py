@@ -58,7 +58,7 @@ xxt, dd4 = cheb4c(ncheb + 2)
 D2=dd2*2**2
 D4=dd4*2**4
 I = np.eye(dd4.shape[0])
-Laplacian=D2-(kx^2+ky^2)*I
+Laplacian=D2-(kx**2+ky**2)*I
 inv_Laplacian=np.linalg.inv(Laplacian)
 Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
 
