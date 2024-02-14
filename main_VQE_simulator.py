@@ -62,7 +62,7 @@ Laplacian=D2-(kx**2+ky**2)*I
 inv_Laplacian=np.linalg.inv(Laplacian)
 Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
 
-A11_12=np.concatenate((Pr*inv_Laplacian*Laplacian_square, inv_Laplacian*Pr*Ra*(-(kx**2+ky**2))) ,axis=1),
+A11_12=np.concatenate((Pr*inv_Laplacian*Laplacian_square, -(kx**2+ky**2)*inv_Laplacian*Pr*Ra ) ,axis=1)
 A21_22=np.concatenate((I, Laplacian),axis=1)
 print(A11_12)
 print(A21_22)
