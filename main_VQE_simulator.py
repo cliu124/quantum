@@ -50,7 +50,7 @@ Ra=1708
 kx=2*np.pi/2.016
 ky=0
 #Construct matrix from Rayleigh Benard convection
-ncheb=n
+ncheb=n/2
 ddm = Chebyshev(degree=ncheb + 1).at_order(2)
    # Enforce Dirichlet BCs
 dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
