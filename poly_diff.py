@@ -303,3 +303,104 @@ class DiffMatOnDomain(DiffMatrices):
     @lru_cache
     def at_order(self, order: int) -> NDArray:
         return self.stretching**order * self.dmat.at_order(order)
+
+
+def cheb4c(ncheb: int) -> tuple[NDArray, NDArray]:
+    """Chebyshev 4th derivative matrix incorporating clamped conditions.
+
+    The function x, D4 =  cheb4c(N) computes the fourth
+    derivative matrix on Chebyshev interior points, incorporating
+    the clamped boundary conditions u(1)=u'(1)=u(-1)=u'(-1)=0.
+
+    Input:
+    ncheb: order of Chebyshev polynomials
+
+    Output:
+    x:      Interior Chebyshev points (vector of length N - 1)
+    D4:     Fourth derivative matrix  (size (N - 1) x (N - 1))
+
+    The code implements two strategies for enhanced
+    accuracy suggested by W. Don and S. Solomonoff in
+    SIAM J. Sci. Comp. Vol. 6, pp. 1253--1268 (1994).
+    The two strategies are (a) the use of trigonometric
+    identities to avoid the computation of differences
+    x(k)-x(j) and (b) the use of the "flipping trick"
+    which is necessary since sin t can be computed to high
+    relative precision when t is small whereas sin (pi-t) cannot.
+
+    J.A.C. Weideman, S.C. Reddy 1998.
+    """
+    if ncheb <= 1:
+        raise Exception("ncheb in cheb4c must be strictly greater than 1")
+
+    # initialize dd4
+    dm4 = np.zeros((4, ncheb - 1, ncheb - 1))
+
+    # nn1, nn2 used for the flipping trick.
+    nn1 = int(np.floor((ncheb + 1) / 2 - 1))
+    nn2 = int(np.ceil((ncheb + 1) / 2 - 1))
+    # compute theta vector.
+    kkk = np.arange(1, ncheb)
+    theta = kkk * np.pi / ncheb
+    # Compute interior Chebyshev points.
+    xch = np.sin(np.pi * (np.linspace(ncheb - 2, 2 - ncheb, ncheb - 1) / (2 * ncheb)))
+    # sin theta
+    sth1 = np.sin(theta[0:nn1])
+    sth2 = np.flipud(np.sin(theta[0:nn2]))
+    sth = np.concatenate((sth1, sth2))
+    # compute weight function and its derivative
+    alpha = sth**4
+    beta1 = -4 * sth**2 * xch / alpha
+    beta2 = 4 * (3 * xch**2 - 1) / alpha
+    beta3 = 24 * xch / alpha
+    beta4 = 24 / alpha
+
+    beta = np.vstack((beta1, beta2, beta3, beta4))
+    thti = np.tile(theta / 2, (ncheb - 1, 1)).T
+    # trigonometric identity
+    ddx = 2 * np.sin(thti.T + thti) * np.sin(thti.T - thti)
+    # flipping trick
+    ddx[nn1:, :] = -np.flipud(np.fliplr(ddx[0:nn2, :]))
+    # diagonals of D = 1
+    ddx[range(ncheb - 1), range(ncheb - 1)] = 1
+
+    # compute the matrix with entries c(k)/c(j)
+    sss = sth**2 * (-1) ** kkk
+    sti = np.tile(sss, (ncheb - 1, 1)).T
+    cmat = sti / sti.T
+
+    # Z contains entries 1/(x(k)-x(j)).
+    # with zeros on the diagonal.
+    zmat = np.array(1 / ddx, float)
+    zmat[range(ncheb - 1), range(ncheb - 1)] = 0
+
+    # X is same as Z', but with
+    # diagonal entries removed.
+    xmat = np.copy(zmat).T
+    xmat2 = xmat
+    for i in range(0, ncheb - 1):
+        xmat2[i : ncheb - 2, i] = xmat[i + 1 : ncheb - 1, i]
+    xmat = xmat2[0 : ncheb - 2, :]
+
+    # initialize Y and D matrices.
+    # Y contains matrix of cumulative sums
+    # D scaled differentiation matrices.
+    ymat = np.ones((ncheb - 2, ncheb - 1))
+    dmat = np.eye(ncheb - 1)
+    for ell in range(4):
+        # diags
+        ymat = np.cumsum(
+            np.vstack((beta[ell, :], (ell + 1) * (ymat[0 : ncheb - 2, :]) * xmat)), 0
+        )
+        # off-diags
+        dmat = (
+            (ell + 1)
+            * zmat
+            * (cmat * np.transpose(np.tile(np.diag(dmat), (ncheb - 1, 1))) - dmat)
+        )
+        # correct the diagonal
+        dmat[range(ncheb - 1), range(ncheb - 1)] = ymat[ncheb - 2, :]
+        # store in dm4
+        dm4[ell, :, :] = dmat
+    dd4 = dm4[3, :, :]
+    return xch, dd4
