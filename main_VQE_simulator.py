@@ -66,7 +66,7 @@ A11_12=np.concatenate((Pr*inv_Laplacian*Laplacian_square, -(kx**2+ky**2)*inv_Lap
 A21_22=np.concatenate((I, Laplacian),axis=1)
 print(A11_12)
 print(A21_22)
-Hamil=np.concatenate([A11_12,A21_22],axis=0)
+Hamil=-np.concatenate([A11_12,A21_22],axis=0)
 
 #--------------------------
 
