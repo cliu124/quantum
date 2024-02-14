@@ -51,10 +51,10 @@ kx=2*np.pi/2.016
 ky=0
 #Construct matrix from Rayleigh Benard convection
 ncheb=n
-ddm = Chebyshev(degree=ncheb + 2).at_order(2)
+ddm = Chebyshev(degree=ncheb + 1).at_order(2)
    # Enforce Dirichlet BCs
-dd2 = ddm[1 : ncheb + 2, 1 : ncheb + 2]
-xxt, dd4 = cheb4c(ncheb + 2)
+dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
+xxt, dd4 = cheb4c(ncheb + 1)
 D2=dd2*2**2
 D4=dd4*2**4
 I = np.eye(dd4.shape[0])
