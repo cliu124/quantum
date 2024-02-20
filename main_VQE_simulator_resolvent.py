@@ -42,7 +42,8 @@ xxt, D4_bc = cheb4c(ncheb + 1)
 zi=1j
 
 I_bc = np.eye(D4_bc.shape[0])
-zero_bc=np.zeros(D4_bc.shape[0])
+rows, cols = D4_bc.shape[0], D4_bc.shape[1]
+zero_bc = [([0]*cols) for i in range(rows)]
 U_bar=np.diag(xxt)
 d_U_bar=I_bc
 dd_U_bar=zero_bc
