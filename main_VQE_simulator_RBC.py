@@ -41,32 +41,32 @@ n = 2 #number of qubits
 N = 2**n #number of matrix size
 
 #construct a Hermitian matrix
-Hamil_real = np.random.randn(N,N)
-Hamil_imag = np.random.randn(N,N)
-Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hamil_imag))
+#Hamil_real = np.random.randn(N,N)
+#Hamil_imag = np.random.randn(N,N)
+#Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hamil_imag))
 
 #------------------- generate matrix from Rayleigh Benard convection
-#Pr=1
-#Ra=1708
-#kx=2*np.pi/2.016
-#ky=0
+Pr=1
+Ra=1708
+kx=2*np.pi/2.016
+ky=0
 #Construct matrix from Rayleigh Benard convection
-#ncheb=int(N/2)
-#ddm = Chebyshev(degree=ncheb + 1).at_order(2)
+ncheb=int(N/2)
+ddm = Chebyshev(degree=ncheb + 1).at_order(2)
    # Enforce Dirichlet BCs
-#dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
-#xxt, dd4 = cheb4c(ncheb + 1)
-#D2=dd2*4
-#D4=dd4*16
-#I = np.eye(dd4.shape[0])
-#Laplacian=D2-(kx**2+ky**2)*I
-#inv_Laplacian=np.linalg.inv(Laplacian)
-#Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
-#A11=Pr*np.matmul(inv_Laplacian,Laplacian_square)
-#A12=-(kx**2+ky**2)*inv_Laplacian*Pr*Ra
-#A11_12=np.concatenate((A11, A12) ,axis=1)
-#A21_22=np.concatenate((I, Laplacian),axis=1)
-#Hamil=-np.concatenate([A11_12,A21_22],axis=0)
+dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
+xxt, dd4 = cheb4c(ncheb + 1)
+D2=dd2*4
+D4=dd4*16
+I = np.eye(dd4.shape[0])
+Laplacian=D2-(kx**2+ky**2)*I
+inv_Laplacian=np.linalg.inv(Laplacian)
+Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
+A11=Pr*np.matmul(inv_Laplacian,Laplacian_square)
+A12=-(kx**2+ky**2)*inv_Laplacian*Pr*Ra
+A11_12=np.concatenate((A11, A12) ,axis=1)
+A21_22=np.concatenate((I, Laplacian),axis=1)
+Hamil=-np.concatenate([A11_12,A21_22],axis=0)
 
 #--------------------------
 

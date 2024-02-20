@@ -21,53 +21,68 @@ backend = Aer.get_backend("qasm_simulator")
 print(backend.name)
 #backend = service.get_backend('ibmq_qasm_simulator')
 
-# c1 = -0.5
-# c2 = 0.75
-# c3 = 2
-
-# n1 = 3
-
-
-# Hamil = np.zeros((n, n))
-# Hamil[1, 1] = c2
-# Hamil[2, 2] = -c3 / 2 + c2
-# Hamil[0, 2] = c1
-# Hamil[1, 2] = c1
-# Hamil[2, 0] = c1
-# Hamil[2, 1] = c1
-
 ###Below is the random Hermitian matrix
 n = 2 #number of qubits
 N = 2**n #number of matrix size
 
-#construct a Hermitian matrix
-Hamil_real = np.random.randn(N,N)
-Hamil_imag = np.random.randn(N,N)
-Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hamil_imag))
-
 #------------------- generate matrix from Rayleigh Benard convection
-#Pr=1
-#Ra=1708
-#kx=2*np.pi/2.016
-#ky=0
+Re=1000
+kx=1
+kz=1
+omega=0
 #Construct matrix from Rayleigh Benard convection
-#ncheb=int(N/2)
-#ddm = Chebyshev(degree=ncheb + 1).at_order(2)
+ncheb=int(N/2)
+ddm = Chebyshev(degree=ncheb + 1).at_order(2)
    # Enforce Dirichlet BCs
-#dd2 = ddm[1 : ncheb + 1, 1 : ncheb + 1]
-#xxt, dd4 = cheb4c(ncheb + 1)
-#D2=dd2*4
-#D4=dd4*16
-#I = np.eye(dd4.shape[0])
-#Laplacian=D2-(kx**2+ky**2)*I
-#inv_Laplacian=np.linalg.inv(Laplacian)
-#Laplacian_square=D4-2*(kx**2+ky**2)*D2+(kx**2+ky**2)**2*I
-#A11=Pr*np.matmul(inv_Laplacian,Laplacian_square)
-#A12=-(kx**2+ky**2)*inv_Laplacian*Pr*Ra
-#A11_12=np.concatenate((A11, A12) ,axis=1)
-#A21_22=np.concatenate((I, Laplacian),axis=1)
-#Hamil=-np.concatenate([A11_12,A21_22],axis=0)
+D2_bc = ddm[1 : ncheb + 1, 1 : ncheb + 1]
 
+ddm1=Chebyshev(degree=ncheb+1).at_order(1)
+D1_bc=ddm1[1 : ncheb+1, 1 : ncheb+1]
+xxt, D4_bc = cheb4c(ncheb + 1)
+zi=np.sqrt(-1)
+
+I_bc = np.eye(D4_bc.shape[0])
+zero_bc=np.zeros(D4_bc.shape[0])
+U_bar=np.diag(xxt)
+d_U_bar=I_bc
+dd_U_bar=zero_bc
+K2=kx**2+kz**2
+Laplacian=D2_bc-K2*I_bc
+inv_Laplacian=np.linalg.inv(Laplacian)
+Laplacian_square=D4_bc-2*(kx**2+kz**2)*D2_bc+(kx**2+kz**2)**2*I_bc
+A11=np.matmul(inv_Laplacian,Laplacian_square)/Re+zi*kx*dd_U_bar+np.matmul(inv_Laplacian,np.matmul(U_bar,-zi*kx*Laplacian))
+A12=zero_bc
+A21=-zi*kx*d_U_bar
+A22=-zi*kx*U_bar+Laplacian/Re
+A11_12=np.concatenate((A11, A12) ,axis=1)
+A21_22=np.concatenate((A21, A22),axis=1)
+A=np.concatenate([A11_12,A21_22],axis=0)
+B11=np.matmul(inv_Laplacian,-zi*kx*D1_bc)
+B12=inv_Laplacian*(-K2)
+B13=inv_Laplacian*(-zi*kz*D1_bc)
+B21=zi*kz*I_bc
+B22=zero_bc
+B23=-zi*kx*I_bc
+B1=np.concatenate((B11,B12,B13),axis=1)
+B2=np.concatenate((B21,B22,B23),axis=1)
+B=np.concatenate([B1,B2],axis=0)
+
+C11=zi*kx*D1_bc/K2
+C12=-zi*kz*I_bc/K2
+C21=I_bc
+C22=zero_bc
+C31=zi*kz*D1_bc/K2
+C32=zi*kx*I_bc/K2
+C1=np.concatenate((C11,C12),axis=1)
+C2=np.concatenate((C21,C22),axis=1)
+C3=np.concatenate((C31,C32),axis=1)
+C=np.concatenate([C1,C2,C3],axis=0)
+
+##to add the weight for Chebyshev grid. 
+
+H=np.matmul(np.matmul(C,np.linalg.inv(1j*omega-A)),B)
+Hamil=np.matmul(H,H.conj().T)
+#H_weight=H
 #--------------------------
 
 
@@ -75,9 +90,9 @@ Hamil = Hamil_real + np.transpose(Hamil_real) + 1j*(Hamil_imag-np.transpose(Hami
 
 
 print("(4x4) Hamiltonian")
-print(Hamil)
-solver = NumPyEigensolver(k=N)
-Hamil_Mat = Operator(Hamil, N)
+print(H)
+solver = NumPyEigensolver(k=3*N)
+Hamil_Mat = Operator(Hamil, 3*N)
 classical_results = solver.compute_eigenvalues(Hamil_Mat)
 print("Qubit Op Eigenvalues: ")
 print(classical_results.eigenvalues)
