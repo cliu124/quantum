@@ -39,7 +39,7 @@ D2_bc = ddm[1 : ncheb + 1, 1 : ncheb + 1]
 ddm1=Chebyshev(degree=ncheb+1).at_order(1)
 D1_bc=ddm1[1 : ncheb+1, 1 : ncheb+1]
 xxt, D4_bc = cheb4c(ncheb + 1)
-zi=np.sqrt(-1)
+zi=1j
 
 I_bc = np.eye(D4_bc.shape[0])
 zero_bc=np.zeros(D4_bc.shape[0])
