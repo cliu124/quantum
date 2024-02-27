@@ -31,7 +31,7 @@ kx=1
 kz=1
 omega=0
 #Construct matrix from Rayleigh Benard convection
-ncheb=int(N/2)
+ncheb=int(N)
 ddm = Chebyshev(degree=ncheb + 1).at_order(2)
    # Enforce Dirichlet BCs
 D2_bc = ddm[1 : ncheb + 1, 1 : ncheb + 1]
@@ -66,7 +66,9 @@ B23=-zi*kx*I_bc
 B1=np.concatenate((B11,B12,B13),axis=1)
 B2=np.concatenate((B21,B22,B23),axis=1)
 B=np.concatenate([B1,B2],axis=0)
-
+Bx=np.concatenate([B11,B21],axis=0)
+By=np.concatenate([B12,B22],axis=0)
+Bz=np.concatenate([B13,B23],axis=0)
 C11=zi*kx*D1_bc/K2
 C12=-zi*kz*I_bc/K2
 C21=I_bc
@@ -80,8 +82,8 @@ C=np.concatenate([C1,C2,C3],axis=0)
 
 ##to add the weight for Chebyshev grid. 
 
-H=np.matmul(np.matmul(C,np.linalg.inv(1j*omega-A)),B)
-Hamil=np.matmul(H,H.conj().T)
+Hux=np.matmul(np.matmul(C1,np.linalg.inv(1j*omega-A)),Bx)
+Hamil=np.matmul(Hux,Hux.conj().T)
 #H_weight=H
 #--------------------------
 
