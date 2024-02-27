@@ -26,7 +26,7 @@ n = 2 #number of qubits
 N = 2**n #number of matrix size
 
 #------------------- generate matrix from Rayleigh Benard convection
-Re=1000
+Re=358
 kx=1
 kz=1
 omega=0
@@ -83,7 +83,7 @@ C=np.concatenate([C1,C2,C3],axis=0)
 ##to add the weight for Chebyshev grid. 
 
 Hux=np.matmul(np.matmul(C1,np.linalg.inv(1j*omega-A)),Bx)
-Hamil=np.matmul(Hux,Hux.conj().T)
+Hamil=-np.matmul(Hux,Hux.conj().T)
 #H_weight=H
 #--------------------------
 

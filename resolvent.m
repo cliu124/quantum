@@ -2,8 +2,8 @@ clear all;
 close all;
 clc;
 
-N=500;
-kx=0; kz=2;
+N=4;
+kx=1; kz=1;
 Re=358;
 omega=0;
 
@@ -30,8 +30,14 @@ B=inv_lap*[-zi*kx*D1_bc, -K2*I_bc, -zi*kz*D1_bc; zi*kz*I_bc, zero_bc, -zi*kx*I_b
 C=[zi*kx*D1_bc, -zi*kz*I_bc;
                     K2*I_bc, zero_bc; 
                    zi*kz*D1_bc, zi*kx*I_bc]/K2;
+Bx=inv_lap*[-zi*kx*D1_bc;
+    zi*kz*I_bc];
+Cu=[zi*kx*D1_bc, -zi*kz*I_bc]/K2;
+
 H_unweight=C*inv(1i*omega-A)*B;
+H_unweight_ux=Cu*inv(1i*omega-A)*Bx;
 sigma_bar_unweight=max(svd(H_unweight));
+sigma_bar_unweight_ux=max(svd(H_unweight_ux));
 num=round(abs(N+1));
 
 %create D0
@@ -52,3 +58,6 @@ Iw_root_bc=sqrtm(diag(weight_bc));
 H=blkdiag(Iw_root_bc,Iw_root_bc,Iw_root_bc)*C*inv(zi*omega-A)*B*blkdiag(inv(Iw_root_bc),inv(Iw_root_bc),inv(Iw_root_bc));
 sigma_bar=max(svd(H));
 sigma_bar_eig=sqrt(max(eig(H*H')));
+
+H_ux=Iw_root_bc*H_unweight_ux*inv(Iw_root_bc);
+sigma_bar_ux=max(svd(H_ux));
