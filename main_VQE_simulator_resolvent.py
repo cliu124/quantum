@@ -25,7 +25,7 @@ print(backend.name)
 n = 2 #number of qubits
 N = 2**n #number of matrix size
 
-#------------------- generate matrix from Rayleigh Benard convection
+#------------------- generate matrix from input-output analysis of plane Couette flow
 Re=358
 kx=1
 kz=1
@@ -96,8 +96,9 @@ weight_full=np.matmul(inte,np.linalg.inv(D0))
 weight_full=weight_full[0,:]
 weight_bc=weight_full[1:-1]
 Iw_root_bc=np.diag(np.sqrt(weight_bc))
-#--------
 
+#--------
+#only consider the H_ux component
 H_unweight_ux=np.matmul(np.matmul(C1,np.linalg.inv(1j*omega-A)),Bx)
 H_ux=np.matmul(np.matmul(Iw_root_bc,H_unweight_ux),np.linalg.inv(Iw_root_bc))
 Hamil=-np.matmul(H_ux,H_ux.conj().T)
