@@ -1,7 +1,7 @@
 clear all;
 close all;
 clc;
-n=8;
+n=4;
 N=2^n;
 kx=1; kz=1;
 Re=358;
