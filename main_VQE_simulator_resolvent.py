@@ -92,7 +92,7 @@ Hamil=np.matmul(Hux,Hux.conj().T)
 
 
 print("(4x4) Hamiltonian")
-print(H)
+print(Hamil)
 solver = NumPyEigensolver(k=3*N)
 Hamil_Mat = Operator(Hamil, 3*N)
 classical_results = solver.compute_eigenvalues(Hamil_Mat)
