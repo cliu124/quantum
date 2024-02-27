@@ -81,9 +81,25 @@ C3=np.concatenate((C31,C32),axis=1)
 C=np.concatenate([C1,C2,C3],axis=0)
 
 ##to add the weight for Chebyshev grid. 
+D0=np.zeros((N+2,N+2))
+num=N+1
+vec=np.linspace(0,N+1,N+2)
+for j in vec:
+    D0[:,j]=np.cos(j*np.pi*vec[:,np.newaxis]/num)
 
-Hux=np.matmul(np.matmul(C1,np.linalg.inv(1j*omega-A)),Bx)
-Hamil=-np.matmul(Hux,Hux.conj().T)
+inte=np.zeros((N+2,N+2))
+one=np.ones((N+2,1))
+for i in np.arange(1,N+2,2):
+    inte[:,i-1]=2/(1-(i-1)**2)*one
+    
+weight_full=inte*np.linalg.inv(D0)
+weight_full=weight_full[0,:]
+weight_bc=weight_full[1:-1]
+Iw_root_bc=np.diag(np.sqrt(weight_bc))
+
+H_unweight_ux=np.matmul(np.matmul(C1,np.linalg.inv(1j*omega-A)),Bx)
+H_ux=np.matmul(np.matmul(Iw_root_bc,H_unweight_ux),np.linalg.inv(Iw_root_bc))
+Hamil=-np.matmul(H_ux,H_ux.conj().T)
 #H_weight=H
 #--------------------------
 
