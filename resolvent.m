@@ -1,8 +1,8 @@
 clear all;
 close all;
 clc;
-
-N=4;
+n=8;
+N=2^n;
 kx=1; kz=1;
 Re=358;
 omega=0;
@@ -34,6 +34,10 @@ Bx=inv_lap*[-zi*kx*D1_bc;
     zi*kz*I_bc];
 Cu=[zi*kx*D1_bc, -zi*kz*I_bc]/K2;
 
+Gradient=[zi*kx*I_bc;
+    D1_bc;
+    zi*kz*I_bc];
+
 H_unweight=C*inv(1i*omega-A)*B;
 H_unweight_ux=Cu*inv(1i*omega-A)*Bx;
 sigma_bar_unweight=max(svd(H_unweight));
@@ -61,3 +65,7 @@ sigma_bar_eig=sqrt(max(eig(H*H')));
 
 H_ux=Iw_root_bc*H_unweight_ux*inv(Iw_root_bc);
 sigma_bar_ux=max(svd(H_ux));
+
+H_grad_ux=blkdiag(Iw_root_bc,Iw_root_bc,Iw_root_bc)*Gradient*H_unweight_ux*inv(Iw_root_bc);
+sigma_bar_ux_grad=max(svd(H_grad_ux));
+sigma_bar_ux_grad_eig=max(sqrt(eig(H_grad_ux'*H_grad_ux)));

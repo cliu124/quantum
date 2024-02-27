@@ -100,8 +100,12 @@ Iw_root_bc=np.diag(np.sqrt(weight_bc))
 #--------
 #only consider the H_ux component
 H_unweight_ux=np.matmul(np.matmul(C1,np.linalg.inv(1j*omega-A)),Bx)
-H_ux=np.matmul(np.matmul(Iw_root_bc,H_unweight_ux),np.linalg.inv(Iw_root_bc))
-Hamil=-np.matmul(H_ux,H_ux.conj().T)
+#H_ux=np.matmul(np.matmul(Iw_root_bc,H_unweight_ux),np.linalg.inv(Iw_root_bc))
+Gradient=np.concatenate([zi*kx*I_bc,D1_bc,zi*kz*I_bc],axis=0)
+Iw_root_bc_blk=np.kron(np.eye(3,dtype=int),Iw_root_bc)
+H_ux_grad=np.matmul(Iw_root_bc_blk,np.matmul(np.matmul(Gradient,H_unweight_ux),np.linalg.inv(Iw_root_bc)))
+
+Hamil=-np.matmul(H_ux_grad.conj().T,H_ux_grad)
 #H_weight=H
 #--------------------------
 
