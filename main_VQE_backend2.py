@@ -9,6 +9,7 @@ from qiskit.circuit.library import EfficientSU2
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Estimator
+from qiskit import transpile
 ###simulator
 #backend = Aer.get_backend("qasm_simulator")
 
@@ -62,6 +63,7 @@ print(Hamil_Qop)
 #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
 #work for arbitrary qubit numbers
 ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+ansatz = transpile(ansatz,backend)
 
 optimizer = optimizers.SLSQP()
 ansatz.decompose().draw("mpl")
@@ -89,17 +91,17 @@ def callback(eval_count, params, value, meta, step):
 # print(optimizer)
 
 # # Create a circuit that uses this operator as a unitary circuit element
-vqd = VQD(estimator, fidelity, ansatz, optimizer, k=1,callback=callback)
-vqd_result = vqd.compute_eigenvalues(operator = Hamil_Qop)
-vqd_values = vqd_result.eigenvalues
+#vqd = VQD(estimator, fidelity, ansatz, optimizer, k=1,callback=callback)
+#vqd_result = vqd.compute_eigenvalues(operator = Hamil_Qop)
+#vqd_values = vqd_result.eigenvalues
 # print('VQD')
 # print(vqd_values)
 # print(vqd_result)
 
 # Create a circuit for VQE computation
-#vqe = VQE(estimator, ansatz, optimizer)
-#vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
-#vqe_values = vqe_result.eigenvalue
+vqe = VQE(estimator, ansatz, optimizer)
+vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
+vqe_values = vqe_result.eigenvalue
 print('VQE')
 print(vqe_values)
 print(vqe_result)
