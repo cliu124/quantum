@@ -16,7 +16,7 @@ QiskitRuntimeService.save_account(channel="ibm_quantum", token="4bd2d7b8910d7af2
 #service.backends()
 service = QiskitRuntimeService(channel='ibm_quantum')
 #backend = service.least_busy(operational=True, simulator=False)
-backend = service.backend("ibm_algiers")
+backend = service.backend("ibm_brisbane")
 print("The Backend is: ",backend.name)
 
 n = 2
