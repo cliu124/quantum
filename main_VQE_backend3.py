@@ -12,9 +12,11 @@ from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Estimator, Options
 
 # loading the IBM Acoount with the Backend
 QiskitRuntimeService.save_account(channel="ibm_quantum", token="4bd2d7b8910d7af201acc988842bb743b5b4c8fa35d22092624009c93549f6dc5f20fce67c17d85b440f535940f043b618798c03327a08e8413fb0c5eae40a18",overwrite=True)
+#service = QiskitRuntimeService()
+#service.backends()
 service = QiskitRuntimeService(channel='ibm_quantum')
-backend = service.least_busy(operational=True, simulator=False)
-
+#backend = service.least_busy(operational=True, simulator=False)
+backend = service.backend("ibm_algiers")
 print("The Backend is: ",backend.name)
 
 n = 2
