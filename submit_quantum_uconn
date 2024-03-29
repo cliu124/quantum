@@ -20,7 +20,7 @@ export SLURM_EXPORT_ENV=ALL
 ##the slurm number to restart simulation... This need full state to be stored.
 SUBMITDIR=$SLURM_SUBMIT_DIR
 WORKDIR=/scratch/chl23026/chl23026/quantum_$SLURM_JOB_ID
-mkdir -p "$WORKDIR" && cp -r main_VQ*.py "$WORKDIR" && cp submit_quantum_uconn "$WORKDIR" && cd "$WORKDIR" || exit -1
+mkdir -p "$WORKDIR" && cp -r main_VQ*.py "$WORKDIR" && cp -r poly* "$WORKDIR" && cp submit_quantum_uconn "$WORKDIR" && cd "$WORKDIR" || exit -1
 
 module unload gcc
 module load python/3.12.1
