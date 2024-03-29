@@ -5,21 +5,29 @@ from qiskit.quantum_info import SparsePauliOp
 #from qiskit.circuit.library import TwoLocal
 #from qiskit.circuit.library import NLocal
 from qiskit.circuit.library import EfficientSU2
-from qiskit.primitives import Sampler, Estimator
+#from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
-from qiskit import Aer
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_aer import Aer
+from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Estimator
+#MORE IMPORTS
+from qiskit.primitives import BackendEstimator, BackendSampler
+from qiskit.providers.fake_provider import GenericBackendV2
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from poly_diff import cheb4c
 from poly_diff import Chebyshev
-###simulator
-backend = Aer.get_backend("qasm_simulator")
 
-#QiskitRuntimeService.save_account(channel="ibm_quantum", token="3e240c42418c07b80ef72d580d6074ef560da4546167a9d2ad9591c0f845526e71e03f2d0fa393a5302212d30b77e406e744cc55bd7e4e22670f095d1f8791d0",overwrite=True)
-#service = QiskitRuntimeService(channel='ibm_quantum')
-#backend = service.least_busy(operational=True, simulator=False)
+###simulator
+#backend = Aer.get_backend("qasm_simulator")
+QiskitRuntimeService.save_account(channel="ibm_quantum", token="0b0acd48100d4ecf49085db3e01fb7b2cd1201f2ad1daa119c7a86f8ed39ec29c8e416fe1d0ffc40007ed373900cab4148c39c595775b9be4766afd5d71b5926",overwrite=True)
+service = QiskitRuntimeService(channel='ibm_quantum')
+backend = service.least_busy(operational=True, simulator=False)
 print(backend.name)
-#backend = service.get_backend('ibmq_qasm_simulator')
+
+print(backend.target.keys())
+
+backend = GenericBackendV2(num_qubits = backend.num_qubits, basis_gates = ['id', 'rz', 'sx', 'x', 'ecr'], coupling_map=backend.coupling_map, calibrate_instructions=backend.instruction_schedule_map, dtm=backend.dtm)
+
 
 ###Below is the random Hermitian matrix
 n = 2 #number of qubits
@@ -106,21 +114,16 @@ Iw_root_bc_blk=np.kron(np.eye(3,dtype=int),Iw_root_bc)
 H_ux_grad=np.matmul(Iw_root_bc_blk,np.matmul(np.matmul(Gradient,H_unweight_ux),np.linalg.inv(Iw_root_bc)))
 
 Hamil=-np.matmul(H_ux_grad.conj().T,H_ux_grad)
-#H_weight=H
-#--------------------------
 
-
-###Below is the matrix from Rayleigh-Benard convection, it is normal matrix but not Hermitian
-
+#-------resolvent from fluid dynamics above
 
 print("Hamiltonian")
 print(Hamil)
-solver = NumPyEigensolver(k=N)
-Hamil_Mat = Operator(Hamil, N)
+solver = NumPyEigensolver(k=n)
+Hamil_Mat = Operator(Hamil, n)
 classical_results = solver.compute_eigenvalues(Hamil_Mat)
 print("Qubit Op Eigenvalues: ")
 print(classical_results.eigenvalues)
-
 eigenvalues,eigenvectors=np.linalg.eig(Hamil)
 print("Eigenvalues from numpy:")
 print(eigenvalues)
@@ -129,47 +132,49 @@ print(np.min(eigenvalues))
 # Create a unitary operator from the hamiltonian matrix
 Hamil_Qop = SparsePauliOp.from_operator(Hamil_Mat)
 print(Hamil_Qop)
-
 #Old version ansatz, from Kalin
 #ansatz = TwoLocal(2, rotation_blocks=["ry", "rz"], entanglement_blocks="cz", reps=1)
-
 #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
 #work for arbitrary qubit numbers
 ansatz = EfficientSU2(Hamil_Qop.num_qubits)
 
+# ADDED PART BELOW
+
+target = backend.target
+pm = generate_preset_pass_manager(target=target, optimization_level=3)
+
+ansatz_isa = pm.run(ansatz)
+hamiltonian_isa = Hamil_Qop.apply_layout(layout=ansatz_isa.layout)
+
+# ADDED PART ABOVE
+
 optimizer = optimizers.SLSQP()
 ansatz.decompose().draw("mpl")
-
-estimator = Estimator()
-sampler = Sampler()
+estimator = BackendEstimator(backend=backend)
+sampler = BackendSampler(backend=backend)
 fidelity = ComputeUncompute(sampler)
 counts = []
 values = []
 steps = []
-
 def callback(eval_count, params, value, meta, step):
     counts.append(eval_count)
     values.append(value)
     steps.append(step)
-
-# #Print these to test. 
+    print(f"count: {counts[-1]}, value: {values[-1]}, step: {steps[-1]}")
+# #Print these to test.
 # print('estimator')
 # print(estimator)
-
 # print('ansatz')
 # print(ansatz)
-
 # print('optimizer')
 # print(optimizer)
-
 # # Create a circuit that uses this operator as a unitary circuit element
-# vqd = VQD(estimator, fidelity, ansatz, optimizer, k=1,callback=callback)
-# vqd_result = vqd.compute_eigenvalues(operator = Hamil_Qop)
-# vqd_values = vqd_result.eigenvalues
+#vqd = VQD(estimator, fidelity, ansatz_isa, optimizer, k=1,callback=callback)
+#vqd_result = vqd.compute_eigenvalues(operator = hamiltonian_isa)
+#vqd_values = vqd_result.eigenvalues
 # print('VQD')
 # print(vqd_values)
 # print(vqd_result)
-
 # Create a circuit for VQE computation
 vqe = VQE(estimator, ansatz, optimizer)
 vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
