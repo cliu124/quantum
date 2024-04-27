@@ -620,145 +620,146 @@ print(f"VQE on Aer qasm simulator (with noise): {result1.eigenvalue.real:.5f}")
 print(f"Delta from reference energy value is {(result1.eigenvalue.real - ref_value):.5f}")
 
 
-##############################################################################################################################################################
-import sys
-sys.path.append(r'C:\Users\zaidi\Downloads\poly_diff.py')
-import poly_diff
-#APPROACH WITH RUNTIME and fake backends, Hamiltonian same as the one used for the above approach
-import numpy as np
-import warnings
 
-warnings.filterwarnings("ignore")
+# ##############################################################################################################################################################
+# import sys
+# sys.path.append(r'C:\Users\zaidi\Downloads\poly_diff.py')
+# import poly_diff
+# #APPROACH WITH RUNTIME and fake backends, Hamiltonian same as the one used for the above approach
+# import numpy as np
+# import warnings
 
-# Pre-defined ansatz circuit and operator class for Hamiltonian
-from qiskit.circuit.library import EfficientSU2
-from qiskit.quantum_info import SparsePauliOp
+# warnings.filterwarnings("ignore")
 
-# SciPy minimizer routine
-from scipy.optimize import minimize
+# # Pre-defined ansatz circuit and operator class for Hamiltonian
+# from qiskit.circuit.library import EfficientSU2
+# from qiskit.quantum_info import SparsePauliOp
 
-# Plotting functions
-import matplotlib.pyplot as plt
+# # SciPy minimizer routine
+# from scipy.optimize import minimize
 
-from qiskit_ibm_runtime import QiskitRuntimeService, Session
-from qiskit_ibm_runtime import EstimatorV2 as Estimator
-from qiskit_ibm_runtime.fake_provider import FakeBrisbane
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+# # Plotting functions
+# import matplotlib.pyplot as plt
 
-#FOR FAKE BACKEND UNCOMMENT THE TWO LINES BELOW
-# fake_brisbane = FakeBrisbane()
+# from qiskit_ibm_runtime import QiskitRuntimeService, Session
+# from qiskit_ibm_runtime import EstimatorV2 as Estimator
+# from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+# from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+# #FOR FAKE BACKEND UNCOMMENT THE TWO LINES BELOW
+# # fake_brisbane = FakeBrisbane()
+# # pm = generate_preset_pass_manager(backend=fake_brisbane, optimization_level=1)
+
+# #FOR NOISE MODEL FROM THE CURRENT NOISE OF THE ACTUAL HARDWARE, USE ALL THE LINES BELOW (220-225)
+# from qiskit_aer import AerSimulator
+# service = QiskitRuntimeService()
+# # Specify a system to use for the noise model
+# backend = service.backend("ibm_brisbane")
+# fake_brisbane = AerSimulator.from_backend(backend)
 # pm = generate_preset_pass_manager(backend=fake_brisbane, optimization_level=1)
-
-#FOR NOISE MODEL FROM THE CURRENT NOISE OF THE ACTUAL HARDWARE, USE ALL THE LINES BELOW (220-225)
-from qiskit_aer import AerSimulator
-service = QiskitRuntimeService()
-# Specify a system to use for the noise model
-backend = service.backend("ibm_brisbane")
-fake_brisbane = AerSimulator.from_backend(backend)
-pm = generate_preset_pass_manager(backend=fake_brisbane, optimization_level=1)
-# isa_qc = pm.run(qc)
+# # isa_qc = pm.run(qc)
  
-# # You can use a fixed seed to get fixed results.
-# options = {"simulator": {"seed_simulator": 42}}
-# estimator = Sampler(backend=fake_brisbane, options=options)
+# # # You can use a fixed seed to get fixed results.
+# # options = {"simulator": {"seed_simulator": 42}}
+# # estimator = Sampler(backend=fake_brisbane, options=options)
 
-hamiltonian = Hamil_Qop
+# hamiltonian = Hamil_Qop
 
-ansatz = EfficientSU2(hamiltonian.num_qubits)
-ansatz.decompose().draw("mpl", style="iqp")
+# ansatz = EfficientSU2(hamiltonian.num_qubits)
+# ansatz.decompose().draw("mpl", style="iqp")
 
-ansatz_isa = pm.run(ansatz)
+# ansatz_isa = pm.run(ansatz)
 
-hamiltonian_isa = hamiltonian.apply_layout(layout=ansatz_isa.layout)
+# hamiltonian_isa = hamiltonian.apply_layout(layout=ansatz_isa.layout)
 
-def cost_func(params, ansatz, hamiltonian, estimator):
-    """Return estimate of energy from estimator
+# def cost_func(params, ansatz, hamiltonian, estimator):
+#     """Return estimate of energy from estimator
 
-    Parameters:
-        params (ndarray): Array of ansatz parameters
-        ansatz (QuantumCircuit): Parameterized ansatz circuit
-        hamiltonian (SparsePauliOp): Operator representation of Hamiltonian
-        estimator (EstimatorV2): Estimator primitive instance
+#     Parameters:
+#         params (ndarray): Array of ansatz parameters
+#         ansatz (QuantumCircuit): Parameterized ansatz circuit
+#         hamiltonian (SparsePauliOp): Operator representation of Hamiltonian
+#         estimator (EstimatorV2): Estimator primitive instance
 
-    Returns:
-        float: Energy estimate
-    """
-    pub = (ansatz, [hamiltonian], [params])
-    result = estimator.run(pubs=[pub]).result()
-    energy = result[0].data.evs[0]
+#     Returns:
+#         float: Energy estimate
+#     """
+#     pub = (ansatz, [hamiltonian], [params])
+#     result = estimator.run(pubs=[pub]).result()
+#     energy = result[0].data.evs[0]
 
-    return energy
+#     return energy
 
-def build_callback(ansatz, hamiltonian, estimator, callback_dict):
-    """Return callback function that uses Estimator instance,
-    and stores intermediate values into a dictionary.
+# def build_callback(ansatz, hamiltonian, estimator, callback_dict):
+#     """Return callback function that uses Estimator instance,
+#     and stores intermediate values into a dictionary.
 
-    Parameters:
-        ansatz (QuantumCircuit): Parameterized ansatz circuit
-        hamiltonian (SparsePauliOp): Operator representation of Hamiltonian
-        estimator (EstimatorV2): Estimator primitive instance
-        callback_dict (dict): Mutable dict for storing values
+#     Parameters:
+#         ansatz (QuantumCircuit): Parameterized ansatz circuit
+#         hamiltonian (SparsePauliOp): Operator representation of Hamiltonian
+#         estimator (EstimatorV2): Estimator primitive instance
+#         callback_dict (dict): Mutable dict for storing values
 
-    Returns:
-        Callable: Callback function object
-    """
+#     Returns:
+#         Callable: Callback function object
+#     """
 
-    def callback(current_vector):
-        """Callback function storing previous solution vector,
-        computing the intermediate cost value, and displaying number
-        of completed iterations and average time per iteration.
+#     def callback(current_vector):
+#         """Callback function storing previous solution vector,
+#         computing the intermediate cost value, and displaying number
+#         of completed iterations and average time per iteration.
 
-        Values are stored in pre-defined 'callback_dict' dictionary.
+#         Values are stored in pre-defined 'callback_dict' dictionary.
 
-        Parameters:
-            current_vector (ndarray): Current vector of parameters
-                                      returned by optimizer
-        """
-        # Keep track of the number of iterations
-        callback_dict["iters"] += 1
-        # Set the prev_vector to the latest one
-        callback_dict["prev_vector"] = current_vector
-        # Compute the value of the cost function at the current vector
-        # This adds an additional function evaluation
-        pub = (ansatz, [hamiltonian], [current_vector])
-        result = estimator.run(pubs=[pub]).result()
-        current_cost = result[0].data.evs[0]
-        callback_dict["cost_history"].append(current_cost)
-        # Print to screen on single line
-        print(
-            "Iters. done: {} [Current cost: {}]".format(callback_dict["iters"], current_cost),
-            end="\r",
-            flush=True,
-        )
-        # print(callback)
+#         Parameters:
+#             current_vector (ndarray): Current vector of parameters
+#                                       returned by optimizer
+#         """
+#         # Keep track of the number of iterations
+#         callback_dict["iters"] += 1
+#         # Set the prev_vector to the latest one
+#         callback_dict["prev_vector"] = current_vector
+#         # Compute the value of the cost function at the current vector
+#         # This adds an additional function evaluation
+#         pub = (ansatz, [hamiltonian], [current_vector])
+#         result = estimator.run(pubs=[pub]).result()
+#         current_cost = result[0].data.evs[0]
+#         callback_dict["cost_history"].append(current_cost)
+#         # Print to screen on single line
+#         print(
+#             "Iters. done: {} [Current cost: {}]".format(callback_dict["iters"], current_cost),
+#             end="\r",
+#             flush=True,
+#         )
+#         # print(callback)
 
-    return callback
+#     return callback
 
-callback_dict = {
-    "prev_vector": None,
-    "iters": 0,
-    "cost_history": [],
-}
+# callback_dict = {
+#     "prev_vector": None,
+#     "iters": 0,
+#     "cost_history": [],
+# }
 
-num_params = ansatz.num_parameters
-num_params
+# num_params = ansatz.num_parameters
+# num_params
 
-x0 = 2 * np.pi * np.random.random(num_params)
+# x0 = 2 * np.pi * np.random.random(num_params)
 
-hamiltonian_isa.coeffs = hamiltonian_isa.coeffs.real
+# hamiltonian_isa.coeffs = hamiltonian_isa.coeffs.real
 
-with Session(backend=fake_brisbane) as session:
-    estimator = Estimator(session=session)
-    estimator.options.default_shots = 10_000
+# with Session(backend=fake_brisbane) as session:
+#     estimator = Estimator(session=session)
+#     estimator.options.default_shots = 10_000
 
-    callback = build_callback(ansatz_isa, hamiltonian_isa, estimator, callback_dict)
+#     callback = build_callback(ansatz_isa, hamiltonian_isa, estimator, callback_dict)
 
-    res = minimize(
-        cost_func,
-        x0,
-        args=(ansatz_isa, hamiltonian_isa, estimator),
-        method="SLSQP",
-        callback=callback,
-    )
+#     res = minimize(
+#         cost_func,
+#         x0,
+#         args=(ansatz_isa, hamiltonian_isa, estimator),
+#         method="SLSQP",
+#         callback=callback,
+#     )
 
-res
+# res
