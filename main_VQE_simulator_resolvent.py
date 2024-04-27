@@ -7,7 +7,7 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit.library import EfficientSU2
 from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
-from qiskit import Aer
+from qiskit_aer import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 from poly_diff import cheb4c
