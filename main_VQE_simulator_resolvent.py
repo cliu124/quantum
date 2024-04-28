@@ -127,7 +127,12 @@ print(eigenvalues)
 print("Minimal Eigenvalue from numpy:")
 print(np.min(eigenvalues))
 # Create a unitary operator from the hamiltonian matrix
-Hamil_Qop = SparsePauliOp.from_operator(Hamil_Mat)
+#Hamil_Qop = SparsePauliOp.from_operator(Hamil_Mat)
+
+#test two qubits directly from label and coefficients
+labels = ['II','IX','IY','XI','XX','XY','YI','YX','YY','ZZ']
+coeffs = [-42.31402125, 32.62105706, 0.79217453, 29.69729437, -26.2774171, 1.95222565, -5.88993997, 8.45475809, -12.46018363, 1.29621812]
+Hamil_Qop = SparsePauliOp(labels, coeffs)
 print(Hamil_Qop)
 
 #Old version ansatz, from Kalin
