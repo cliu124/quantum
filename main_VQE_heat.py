@@ -83,13 +83,19 @@ optimizer = optimizers.SLSQP()
 
 counts = []
 values = []
-steps = []
+#steps = []
 
-def callback(eval_count, params, value, meta, step):
+
+def store_intermediate_result(eval_count, parameters, mean, std):
     counts.append(eval_count)
-    values.append(value)
-    steps.append(step)
-    print(f"count: {counts[-1]}, value: {values[-1]}, step: {steps[-1]}")
+    values.append(mean)
+    print(f"count: {counts[-1]}, value: {values[-1]}")
+
+# def callback(eval_count, params, value, meta, step):
+#     counts.append(eval_count)
+#     values.append(value)
+#     steps.append(step)
+#     print(f"count: {counts[-1]}, value: {values[-1]}, step: {steps[-1]}")
 
 
 
@@ -113,7 +119,7 @@ if quantum=='aer':
     ansatz = EfficientSU2(Hamil_Qop.num_qubits)
     
     start_time_VQE=time.time()
-    vqe = VQE(estimator, ansatz, optimizer,callback=callback)
+    vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
     vqe_values = vqe_result.eigenvalue
     
@@ -147,7 +153,7 @@ elif quantum =='fakebackend':
         transpile_options={"seed_transpiler": seed},
     )
     
-    vqe = VQE(noiseless_estimator, ansatz, optimizer=optimizer, callback=callback)
+    vqe = VQE(noiseless_estimator, ansatz, optimizer=optimizer, callback=store_intermediate_result)
     result = vqe.compute_minimum_eigenvalue(operator=Hamil_Qop)
     print(f"VQE on Aer qasm simulator (no noise): {result.eigenvalue.real:.5f}")
     
@@ -199,7 +205,7 @@ elif quantum =='backend1':
     fidelity = ComputeUncompute(sampler)
 
     start_time_VQE=time.time()
-    vqe = VQE(estimator, ansatz, optimizer,callback=callback)
+    vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
     vqe_values = vqe_result.eigenvalue
     
