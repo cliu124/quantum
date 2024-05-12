@@ -17,7 +17,7 @@ from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit_aer import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService
-
+import time
 
 A=['X']
 coeff=[1]
@@ -26,6 +26,7 @@ n=4
 N=2**n
 h=1/(N+1)
 
+start_time_pauli=time.time()
 #generate the label and coefficient of off-diagonal matrices following
 # https://quantumcomputing.stackexchange.com/questions/23584/what-is-the-best-way-to-write-a-tridiagonal-matrix-as-a-linear-combination-of-pa
 # and https://quantumcomputing.stackexchange.com/questions/23522/how-to-write-the-three-qubit-ghz-state-in-the-pauli-basis/23525#23525
@@ -63,6 +64,9 @@ coeff=coeff+ [(-2/h**2)]
 #reverse the sign for all coefficients as VQE only compute minimal eigenvalue, but we want to solve maximum eigenvalue
 coeff=[ -i for i in coeff]        
 
+end_time_pauli=time.time()
+print('Time for construct Pauli decomposition of tridiagonal matrices')
+print(end_time_pauli-start_time_pauli)
 #-------------------
 #get the quantum backend (hardware or simulator) and then compute
 backend = Aer.get_backend("qasm_simulator")
@@ -96,14 +100,20 @@ def callback(eval_count, params, value, meta, step):
     values.append(value)
     steps.append(step)
 
+start_time_VQE=time.time()
 vqe = VQE(estimator, ansatz, optimizer)
 vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
 vqe_values = vqe_result.eigenvalue
+
+end_time_VQE=time.time()
 print('VQE')
 print(vqe_result)
 
 print('Minimal eigenvalue from VQE is:')
 print(vqe_values)
+
+print('Computing Time of VQE:')
+print(end_time_VQE-start_time_VQE)
 
 #-----------------------------
 #Below is convert to classical computation and check
@@ -118,6 +128,7 @@ Z=np.array([[1,0],[0,-1]])
 #initialize the zero Hamiltonian matrix
 Ham_mat=np.zeros((2**n,2**n))
 
+start_time_classical_pauli=time.time()
 for label_ind in range(len(A)):
     label = A[label_ind]
     
@@ -136,8 +147,16 @@ for label_ind in range(len(A)):
     #construct the Hamiltonian matrix based on the coefficients and the basis        
     Ham_mat = Ham_mat+ coeff[label_ind]*basis
     
+end_time_classical_pauli=time.time()
+print('Time for constructing Hamiltonian matrix from pauli decomposition')
+print(end_time_classical_pauli-start_time_classical_pauli)    
+
+start_time_numpy_eig=time.time()    
 eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
+end_time_numpy_eig=time.time()
 print("Eigenvalues from numpy:")
 print(eigenvalues)
 print("Minimal Eigenvalue from numpy:")
 print(np.min(eigenvalues))  
+print("Time for classical eig solver in numpy:")
+print(end_time_numpy_eig-start_time_numpy_eig)
