@@ -21,10 +21,10 @@ import time
 from scipy.sparse.linalg import eigsh
 
 
-n=4 #number of qubit
+n=2 #number of qubit
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
-dimension =1 #1, 2, 3 
+dimension =2 #1, 2, 3 
 
 N=2**n #matrix size
 h=1/(N+1) #step size
@@ -252,7 +252,7 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
     Z=np.array([[1,0],[0,-1]])
     
     #initialize the zero Hamiltonian matrix
-    Ham_mat=np.zeros((2**n,2**n))
+    Ham_mat=np.zeros((2**(n*dimension),2**(n*dimension)))
     
     start_time_classical_pauli=time.time()
     for label_ind in range(len(A)):
