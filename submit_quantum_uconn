@@ -24,7 +24,8 @@ mkdir -p "$WORKDIR" && cp -r main_VQ*.py "$WORKDIR" && cp -r poly* "$WORKDIR" &&
 
 module unload gcc
 module load python/3.12.1
-conda activate qiskit
+##conda activate qiskit
+source /home/chl23026/qiskit_env/bin/activate
 
 python3 main_VQE_backend1_resolvent.py
 

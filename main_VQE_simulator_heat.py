@@ -18,6 +18,7 @@ from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit_aer import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService
 import time
+from scipy.sparse.linalg import eigsh
 
 
 n=4 #number of qubit
@@ -157,9 +158,10 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
     print(end_time_classical_pauli-start_time_classical_pauli)    
     
     start_time_numpy_eig=time.time()    
-    eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
+    #eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
+    eigenvalues, eigenvectors = eigsh(Ham_mat, k=1,which='SA')
     end_time_numpy_eig=time.time()
-    print("Eigenvalues from numpy:")
+    print("Eigenvalues from scipy:")
     print(eigenvalues)
     print("Minimal Eigenvalue from numpy:")
     print(np.min(eigenvalues))  
