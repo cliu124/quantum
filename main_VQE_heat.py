@@ -71,14 +71,14 @@ coeff=coeff+ [(-2/h**2)]
 if dimension ==2:
     Axx=['I'*n + x for x in A]
     Ayy=[x+'I'*n for x in A]
-    A=[Axx,Ayy]
-    coeff=[coeff,coeff]
+    A=Axx+Ayy
+    coeff=coeff+coeff
 elif dimension ==3:
     Axx=['I'*(2*n) + x for x in A]
     Ayy=['I'*n +x+ 'I'*n for x in A]
     Azz=[x+ 'I'*(2*n) for x in A]
-    A=[Axx,Ayy,Azz]
-    coeff=[coeff,coeff,coeff]
+    A=Axx+Ayy+Azz
+    coeff=coeff+coeff+coeff
     
     
 #reverse the sign for all coefficients as VQE only compute minimal eigenvalue, but we want to solve maximum eigenvalue
