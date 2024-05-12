@@ -1,0 +1,143 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat May 11 20:13:53 2024
+
+@author: chang
+"""
+import numpy as np
+from itertools import permutations
+import functools as ft
+from qiskit_algorithms import VQE, VQD, NumPyEigensolver, optimizers
+from qiskit.quantum_info.operators import Operator
+from qiskit.quantum_info import SparsePauliOp
+#from qiskit.circuit.library import TwoLocal
+#from qiskit.circuit.library import NLocal
+from qiskit.circuit.library import EfficientSU2
+from qiskit.primitives import Sampler, Estimator
+from qiskit_algorithms.state_fidelities import ComputeUncompute
+from qiskit_aer import Aer
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+
+A=['X']
+coeff=[1]
+
+n=4
+N=2**n
+h=1/(N+1)
+
+#generate the label and coefficient of off-diagonal matrices following
+# https://quantumcomputing.stackexchange.com/questions/23584/what-is-the-best-way-to-write-a-tridiagonal-matrix-as-a-linear-combination-of-pa
+# and https://quantumcomputing.stackexchange.com/questions/23522/how-to-write-the-three-qubit-ghz-state-in-the-pauli-basis/23525#23525
+for n_local in range(2,n+1): #iteration to update A_{n+1} using A_n
+    A=['I' + x for x in A]
+    
+    #Here, use i that is the local n as the summation limit. 
+    for t in range(0,int(np.floor(n_local/2))+1):
+        string='X'*(n_local-2*t)+'Y'*(2*t) #generate the string
+        
+        #generate perms_t that is the list of permutation of string without repeatness
+        perms = [''.join(p) for p in permutations(string)] #generate the permutation
+        perms_t=list(set(perms))
+        
+        #get the coefficient for corresponding coefficient
+        #This will encode B_n in https://quantumcomputing.stackexchange.com/questions/23584/what-is-the-best-way-to-write-a-tridiagonal-matrix-as-a-linear-combination-of-pa
+        coeff_t=[(-1)**t/2**(n_local-1)]*len(perms_t)
+
+        #This will encode (X \kron I)B_n (X \kron I). Only if the first gate is Y gate, we need to add a minus sign for coefficient
+        for label_ind in range(len(perms_t)):
+            if perms_t[label_ind][0] == 'Y':
+                coeff_t[label_ind]=-coeff_t[label_ind]
+        
+        #add them to the label list and coefficient list. 
+        A=A+perms_t
+        coeff=coeff+coeff_t
+     
+#Add the coefficient of the off-diagonal matrix        
+coeff=[ (1/h**2)*i for i in coeff]        
+
+#Add the diagonal component of the tridiagonal matrix after finite difference        
+A=A+['I'*n]
+coeff=coeff+ [(-2/h**2)]
+
+#reverse the sign for all coefficients as VQE only compute minimal eigenvalue, but we want to solve maximum eigenvalue
+coeff=[ -i for i in coeff]        
+
+#-------------------
+#get the quantum backend (hardware or simulator) and then compute
+backend = Aer.get_backend("qasm_simulator")
+
+#QiskitRuntimeService.save_account(channel="ibm_quantum", token="3e240c42418c07b80ef72d580d6074ef560da4546167a9d2ad9591c0f845526e71e03f2d0fa393a5302212d30b77e406e744cc55bd7e4e22670f095d1f8791d0",overwrite=True)
+#service = QiskitRuntimeService(channel='ibm_quantum')
+#backend = service.least_busy(operational=True, simulator=False)
+print(backend.name)
+
+#construct the Hamiltonian operator using labels (A) and coeff
+Hamil_Qop = SparsePauliOp(A, coeff)
+print(Hamil_Qop)
+
+
+#from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
+#work for arbitrary qubit numbers
+ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+
+optimizer = optimizers.SLSQP()
+#ansatz.decompose().draw("mpl")
+
+estimator = Estimator()
+sampler = Sampler()
+fidelity = ComputeUncompute(sampler)
+counts = []
+values = []
+steps = []
+
+def callback(eval_count, params, value, meta, step):
+    counts.append(eval_count)
+    values.append(value)
+    steps.append(step)
+
+vqe = VQE(estimator, ansatz, optimizer)
+vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
+vqe_values = vqe_result.eigenvalue
+print('VQE')
+print(vqe_result)
+
+print('Minimal eigenvalue from VQE is:')
+print(vqe_values)
+
+#-----------------------------
+#Below is convert to classical computation and check
+#convert the pauli matrices encoding back to the classical expression of Hamiltonian
+
+#Four different Pauli basis
+I=np.array([[1,0],[0,1]])
+X=np.array([[0,1],[1,0]])
+Y=np.array([[0,-1j],[1j,0]])
+Z=np.array([[1,0],[0,-1]])
+
+#initialize the zero Hamiltonian matrix
+Ham_mat=np.zeros((2**n,2**n))
+
+for label_ind in range(len(A)):
+    label = A[label_ind]
+    
+    #Take the Kronecker product based on the label to construct the basis 
+    basis=1
+    for char_ind in range(len(label)):
+        if label[char_ind] =='I':
+            basis = np.kron(basis,I)
+        elif label[char_ind] =='X':
+            basis = np.kron(basis,X)
+        elif label[char_ind] =='Y':
+            basis = np.kron(basis,Y)
+        elif label[char_ind] =='Z':
+            basis = np.kron(basis,Z)
+            
+    #construct the Hamiltonian matrix based on the coefficients and the basis        
+    Ham_mat = Ham_mat+ coeff[label_ind]*basis
+    
+eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
+print("Eigenvalues from numpy:")
+print(eigenvalues)
+print("Minimal Eigenvalue from numpy:")
+print(np.min(eigenvalues))  
