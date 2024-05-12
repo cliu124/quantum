@@ -19,14 +19,17 @@ from qiskit_aer import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService
 import time
 
-A=['X']
-coeff=[1]
 
-n=4
-N=2**n
-h=1/(N+1)
+n=4 #number of qubit
+classical=1
+
+N=2**n #matrix size
+h=1/(N+1) #step size
 
 start_time_pauli=time.time()
+
+A=['X']
+coeff=[1]
 #generate the label and coefficient of off-diagonal matrices following
 # https://quantumcomputing.stackexchange.com/questions/23584/what-is-the-best-way-to-write-a-tridiagonal-matrix-as-a-linear-combination-of-pa
 # and https://quantumcomputing.stackexchange.com/questions/23522/how-to-write-the-three-qubit-ghz-state-in-the-pauli-basis/23525#23525
@@ -119,44 +122,50 @@ print(end_time_VQE-start_time_VQE)
 #Below is convert to classical computation and check
 #convert the pauli matrices encoding back to the classical expression of Hamiltonian
 
-#Four different Pauli basis
-I=np.array([[1,0],[0,1]])
-X=np.array([[0,1],[1,0]])
-Y=np.array([[0,-1j],[1j,0]])
-Z=np.array([[1,0],[0,-1]])
-
-#initialize the zero Hamiltonian matrix
-Ham_mat=np.zeros((2**n,2**n))
-
-start_time_classical_pauli=time.time()
-for label_ind in range(len(A)):
-    label = A[label_ind]
+if classical:#If 1, then convert back to classical Hamiltonian matrix and use numpy to compute eigenvalues
+        
+    #Four different Pauli basis
+    I=np.array([[1,0],[0,1]])
+    X=np.array([[0,1],[1,0]])
+    Y=np.array([[0,-1j],[1j,0]])
+    Z=np.array([[1,0],[0,-1]])
     
-    #Take the Kronecker product based on the label to construct the basis 
-    basis=1
-    for char_ind in range(len(label)):
-        if label[char_ind] =='I':
-            basis = np.kron(basis,I)
-        elif label[char_ind] =='X':
-            basis = np.kron(basis,X)
-        elif label[char_ind] =='Y':
-            basis = np.kron(basis,Y)
-        elif label[char_ind] =='Z':
-            basis = np.kron(basis,Z)
-            
-    #construct the Hamiltonian matrix based on the coefficients and the basis        
-    Ham_mat = Ham_mat+ coeff[label_ind]*basis
+    #initialize the zero Hamiltonian matrix
+    Ham_mat=np.zeros((2**n,2**n))
     
-end_time_classical_pauli=time.time()
-print('Time for constructing Hamiltonian matrix from pauli decomposition')
-print(end_time_classical_pauli-start_time_classical_pauli)    
+    start_time_classical_pauli=time.time()
+    for label_ind in range(len(A)):
+        label = A[label_ind]
+        
+        #Take the Kronecker product based on the label to construct the basis 
+        basis=1
+        for char_ind in range(len(label)):
+            if label[char_ind] =='I':
+                basis = np.kron(basis,I)
+            elif label[char_ind] =='X':
+                basis = np.kron(basis,X)
+            elif label[char_ind] =='Y':
+                basis = np.kron(basis,Y)
+            elif label[char_ind] =='Z':
+                basis = np.kron(basis,Z)
+                
+        #construct the Hamiltonian matrix based on the coefficients and the basis        
+        Ham_mat = Ham_mat+ coeff[label_ind]*basis
+        
+    end_time_classical_pauli=time.time()
+    print('Time for constructing Hamiltonian matrix from pauli decomposition')
+    print(end_time_classical_pauli-start_time_classical_pauli)    
+    
+    start_time_numpy_eig=time.time()    
+    eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
+    end_time_numpy_eig=time.time()
+    print("Eigenvalues from numpy:")
+    print(eigenvalues)
+    print("Minimal Eigenvalue from numpy:")
+    print(np.min(eigenvalues))  
+    print("Time for classical eig solver in numpy:")
+    print(end_time_numpy_eig-start_time_numpy_eig)
 
-start_time_numpy_eig=time.time()    
-eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
-end_time_numpy_eig=time.time()
-print("Eigenvalues from numpy:")
-print(eigenvalues)
-print("Minimal Eigenvalue from numpy:")
-print(np.min(eigenvalues))  
-print("Time for classical eig solver in numpy:")
-print(end_time_numpy_eig-start_time_numpy_eig)
+
+print("Analytical solution for the heat equation (D=1):")
+print(np.pi**2)
