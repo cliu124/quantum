@@ -24,6 +24,7 @@ from scipy.sparse.linalg import eigsh
 n=4 #number of qubit
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
+dimension =1 #1, 2, 3 
 
 N=2**n #matrix size
 h=1/(N+1) #step size
@@ -66,6 +67,20 @@ coeff=[ (1/h**2)*i for i in coeff]
 A=A+['I'*n]
 coeff=coeff+ [(-2/h**2)]
 
+#if dimension ==1, do not need to do anything. 
+if dimension ==2:
+    Axx=['I'*n + x for x in A]
+    Ayy=[x+'I'*n for x in A]
+    A=[Axx,Ayy]
+    coeff=[coeff,coeff]
+elif dimension ==3:
+    Axx=['I'*(2*n) + x for x in A]
+    Ayy=['I'*n +x+ 'I'*n for x in A]
+    Azz=[x+ 'I'*(2*n) for x in A]
+    A=[Axx,Ayy,Azz]
+    coeff=[coeff,coeff,coeff]
+    
+    
 #reverse the sign for all coefficients as VQE only compute minimal eigenvalue, but we want to solve maximum eigenvalue
 coeff=[ -i for i in coeff]        
 
@@ -282,4 +297,4 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
     # print(end_time_scipy_eigsh-start_time_scipy_eigsh)
 
 print("Analytical solution for the heat equation (D=1):")
-print(np.pi**2)
+print(np.pi**2*dimension)
