@@ -120,6 +120,8 @@ if quantum=='aer':
     
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
+    #    vqe = VQE(estimator, ansatz, optimizer)
+
     vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
     vqe_values = vqe_result.eigenvalue
     
@@ -154,6 +156,8 @@ elif quantum =='fakebackend':
     )
     
     vqe = VQE(noiseless_estimator, ansatz, optimizer=optimizer, callback=store_intermediate_result)
+    #    vqe = VQE(noiseless_estimator, ansatz, optimizer=optimizer)
+
     result = vqe.compute_minimum_eigenvalue(operator=Hamil_Qop)
     print(f"VQE on Aer qasm simulator (no noise): {result.eigenvalue.real:.5f}")
     
@@ -206,6 +210,7 @@ elif quantum =='backend1':
 
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
+    #    vqe = VQE(estimator, ansatz, optimizer)
     vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
     vqe_values = vqe_result.eigenvalue
     
