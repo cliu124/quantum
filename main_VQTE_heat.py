@@ -7,9 +7,9 @@ Created on Sat May 11 20:13:53 2024
 import numpy as np
 from itertools import permutations
 import functools as ft
-from qiskit_algorithms import VQE, optimizers
+from qiskit_algorithms import VQE, optimizers, TimeEvolutionProblem, VarQITE, SciPyImaginaryEvolver, VarQRTE, SciPyRealEvolver
 from qiskit.quantum_info.operators import Operator
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.quantum_info import SparsePauliOp, Statevector
 #from qiskit.circuit.library import TwoLocal
 #from qiskit.circuit.library import NLocal
 from qiskit.circuit.library import EfficientSU2
@@ -19,6 +19,9 @@ from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit_ibm_runtime import QiskitRuntimeService
 import time
 from scipy.sparse.linalg import eigsh
+
+#package for time evolution. 
+from qiskit_algorithms.time_evolvers.variational import ImaginaryMcLachlanPrinciple, RealMcLachlanPrinciple
 
 
 n=2 #number of qubit for one dimension.
@@ -88,6 +91,7 @@ elif dimension ==3:
     
     
 #reverse the sign for all coefficients as VQE only compute minimal eigenvalue, but we want to solve maximum eigenvalue
+#This is because for VQTE it solves d\psi/dt= -iH \psi. For the imaginary time evoler, this will work. Also we need to add minus sign to convert it to standard ODE. 
 coeff=[ -i for i in coeff]        
 
 end_time_pauli=time.time()
@@ -99,7 +103,7 @@ Hamil_Qop = SparsePauliOp(A, coeff)
 print(Hamil_Qop)
 
 #setup classical optimizer
-optimizer = optimizers.SLSQP()
+optimizer = optimizers.SPSA()
 #ansatz.decompose().draw("mpl")
 
 counts = []
@@ -112,12 +116,12 @@ def store_intermediate_result(eval_count, parameters, mean, std):
     values.append(mean)
     print(f"count: {counts[-1]}, value: {values[-1]}")
 
-# def callback(eval_count, params, value, meta, step):
-#     counts.append(eval_count)
-#     values.append(value)
-#     steps.append(step)
-#     print(f"count: {counts[-1]}, value: {values[-1]}, step: {steps[-1]}")
 
+var_principle = ImaginaryMcLachlanPrinciple()
+#setup the final time and the TimeEvolutionProblem
+time = 5.0
+aux_ops = [Hamil_Qop]
+evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, aux_operators=aux_ops)
 
 
 if quantum=='aer':
@@ -155,6 +159,29 @@ if quantum=='aer':
     
     print('Computing Time of VQE:')
     print(end_time_VQE-start_time_VQE)
+
+#-----------------Variational quantum time evolution
+    init_param_values={}
+    for i in range(len(ansatz.parameters)):
+        init_param_values[ansatz.parameters[i]]=np.pi/2
+    
+    var_qite = VarQITE(ansatz, init_param_values, var_principle, estimator)
+    # an Estimator instance is necessary, if we want to calculate the expectation value of auxiliary operators.
+    evolution_result = var_qite.evolve(evolution_problem)
+    
+    
+    #exact solution from scipy
+    init_state = Statevector(ansatz.assign_parameters(init_param_values))
+    evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, initial_state=init_state, aux_operators=aux_ops)
+    exact_evol = SciPyImaginaryEvolver(num_timesteps=501)
+    sol = exact_evol.evolve(evolution_problem)
+    
+    h_exp_val = np.array([ele[0][0] for ele in evolution_result.observables])
+    exact_h_exp_val = sol.observables[0][0].real
+    
+    print('error between VarQITE and exact solutions:')
+    print(h_exp_val-exact_h_exp_val)
+
     
 elif quantum =='fakebackend':
     
@@ -304,3 +331,5 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
 
 print("Analytical solution for the heat equation (D=1):")
 print(np.pi**2*dimension)
+
+
