@@ -119,9 +119,9 @@ def store_intermediate_result(eval_count, parameters, mean, std):
 
 var_principle = ImaginaryMcLachlanPrinciple()
 #setup the final time and the TimeEvolutionProblem
-time = 5.0
+stop_time = 5.0
 aux_ops = [Hamil_Qop]
-evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, aux_operators=aux_ops)
+evolution_problem = TimeEvolutionProblem(Hamil_Qop, stop_time, aux_operators=aux_ops)
 
 
 if quantum=='aer':
@@ -143,32 +143,20 @@ if quantum=='aer':
     #work for arbitrary qubit numbers
     ansatz = EfficientSU2(Hamil_Qop.num_qubits)
     
-    start_time_VQE=time.time()
-    vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
-    #    vqe = VQE(estimator, ansatz, optimizer)
-
-    vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
-    vqe_values = vqe_result.eigenvalue
-    
-    end_time_VQE=time.time()
-    print('VQE')
-    print(vqe_result)
-    
-    print('Minimal eigenvalue from VQE is:')
-    print(vqe_values)
-    
-    print('Computing Time of VQE:')
-    print(end_time_VQE-start_time_VQE)
 
 #-----------------Variational quantum time evolution
     init_param_values={}
     for i in range(len(ansatz.parameters)):
         init_param_values[ansatz.parameters[i]]=np.pi/2
     
+    #start of VQTE
+    start_time_VQTE=time.time()
     var_qite = VarQITE(ansatz, init_param_values, var_principle, estimator)
     # an Estimator instance is necessary, if we want to calculate the expectation value of auxiliary operators.
     evolution_result = var_qite.evolve(evolution_problem)
-    
+    end_time_VQTE=time.time()
+    print('Time of Variational quantum time Evolution:', end_time_VQTE-start_time_VQTE)
+    #end of VQTE
     
     #exact solution from scipy
     init_state = Statevector(ansatz.assign_parameters(init_param_values))
