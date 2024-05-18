@@ -154,6 +154,7 @@ if quantum=='aer':
     var_qite = VarQITE(ansatz, init_param_values, var_principle, estimator)
     # an Estimator instance is necessary, if we want to calculate the expectation value of auxiliary operators.
     evolution_result = var_qite.evolve(evolution_problem)
+    print(evolution_result)
     h_exp_val = np.array([ele[0][0] for ele in evolution_result.observables])
     end_time_VQTE=tictoc.time()
     print('Results of Variational quantum imaginary time Evolution:',h_exp_val)
@@ -163,9 +164,11 @@ if quantum=='aer':
     
     #exact solution from scipy
     init_state = Statevector(ansatz.assign_parameters(init_param_values))
+    print('Initial state:',init_state)
     evolution_problem = TimeEvolutionProblem(Hamil_Qop, stop_time, initial_state=init_state, aux_operators=aux_ops)
     exact_evol = SciPyImaginaryEvolver(num_timesteps=501)
     sol = exact_evol.evolve(evolution_problem)
+    print(sol)
     exact_h_exp_val = sol.observables[0][0].real
     print('Results from scipy:', exact_h_exp_val)
     print('error between VarQITE and exact solutions:')
