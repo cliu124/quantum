@@ -27,7 +27,7 @@ from qiskit_algorithms.time_evolvers.variational import ImaginaryMcLachlanPrinci
 n=2 #number of qubit for one dimension.
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
-dimension =2 #1, 2, 3, The physical dimension of heat equation. The 
+dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
 #The total qubits for the computation is n* dimension, and Hamiltonian will be in size 2**(n*dimension) * 2**(n*dimension)
 
 N=2**n #matrix size
@@ -154,19 +154,20 @@ if quantum=='aer':
     var_qite = VarQITE(ansatz, init_param_values, var_principle, estimator)
     # an Estimator instance is necessary, if we want to calculate the expectation value of auxiliary operators.
     evolution_result = var_qite.evolve(evolution_problem)
+    h_exp_val = np.array([ele[0][0] for ele in evolution_result.observables])
     end_time_VQTE=time.time()
+    print(h_exp_val)
     print('Time of Variational quantum time Evolution:', end_time_VQTE-start_time_VQTE)
     #end of VQTE
+    print('Observable is:', evolution_result.observables)
     
     #exact solution from scipy
     init_state = Statevector(ansatz.assign_parameters(init_param_values))
     evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, initial_state=init_state, aux_operators=aux_ops)
     exact_evol = SciPyImaginaryEvolver(num_timesteps=501)
     sol = exact_evol.evolve(evolution_problem)
-    
-    h_exp_val = np.array([ele[0][0] for ele in evolution_result.observables])
     exact_h_exp_val = sol.observables[0][0].real
-    
+    print(exact_h_exp_val)
     print('error between VarQITE and exact solutions:')
     print(h_exp_val-exact_h_exp_val)
 
