@@ -17,7 +17,7 @@ from qiskit.circuit.library import EfficientSU2
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 #from qiskit_aer import Aer
 from qiskit_ibm_runtime import QiskitRuntimeService
-import time
+import time as tictoc
 from scipy.sparse.linalg import eigsh
 
 #package for time evolution. 
@@ -33,7 +33,7 @@ dimension =1 #1, 2, 3, The physical dimension of heat equation. The
 N=2**n #matrix size
 h=1/(N+1) #step size
 
-start_time_pauli=time.time()
+start_time_pauli=tictoc.time()
 
 A=['X']
 coeff=[1]
@@ -94,7 +94,7 @@ elif dimension ==3:
 #This is because for VQTE it solves d\psi/dt= -iH \psi. For the imaginary time evoler, this will work. Also we need to add minus sign to convert it to standard ODE. 
 coeff=[ -i for i in coeff]        
 
-end_time_pauli=time.time()
+end_time_pauli=tictoc.time()
 print('Time for construct Pauli decomposition of tridiagonal matrices')
 print(end_time_pauli-start_time_pauli)
 #-------------------
@@ -150,24 +150,24 @@ if quantum=='aer':
         init_param_values[ansatz.parameters[i]]=np.pi/2
     
     #start of VQTE
-    start_time_VQTE=time.time()
+    start_time_VQTE=tictoc.time()
     var_qite = VarQITE(ansatz, init_param_values, var_principle, estimator)
     # an Estimator instance is necessary, if we want to calculate the expectation value of auxiliary operators.
     evolution_result = var_qite.evolve(evolution_problem)
     h_exp_val = np.array([ele[0][0] for ele in evolution_result.observables])
-    end_time_VQTE=time.time()
-    print(h_exp_val)
-    print('Time of Variational quantum time Evolution:', end_time_VQTE-start_time_VQTE)
+    end_time_VQTE=tictoc.time()
+    print('Results of Variational quantum imaginary time Evolution:',h_exp_val)
+    print('Time of Variational quantum imaginary time Evolution:', end_time_VQTE-start_time_VQTE)
     #end of VQTE
-    print('Observable is:', evolution_result.observables)
+    #print('Observable is:', evolution_result.observables)
     
     #exact solution from scipy
     init_state = Statevector(ansatz.assign_parameters(init_param_values))
-    evolution_problem = TimeEvolutionProblem(Hamil_Qop, time, initial_state=init_state, aux_operators=aux_ops)
+    evolution_problem = TimeEvolutionProblem(Hamil_Qop, stop_time, initial_state=init_state, aux_operators=aux_ops)
     exact_evol = SciPyImaginaryEvolver(num_timesteps=501)
     sol = exact_evol.evolve(evolution_problem)
     exact_h_exp_val = sol.observables[0][0].real
-    print(exact_h_exp_val)
+    print('Results from scipy:', exact_h_exp_val)
     print('error between VarQITE and exact solutions:')
     print(h_exp_val-exact_h_exp_val)
 
@@ -245,13 +245,13 @@ elif quantum =='backend1':
     sampler = BackendSampler(backend=backend)
     fidelity = ComputeUncompute(sampler)
 
-    start_time_VQE=time.time()
+    start_time_VQE=tictoc.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     #    vqe = VQE(estimator, ansatz, optimizer)
     vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
     vqe_values = vqe_result.eigenvalue
     
-    end_time_VQE=time.time()
+    end_time_VQE=tictoc.time()
     print('VQE')
     print(vqe_result)
     
@@ -276,7 +276,7 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
     #initialize the zero Hamiltonian matrix
     Ham_mat=np.zeros((2**(n*dimension),2**(n*dimension)))
     
-    start_time_classical_pauli=time.time()
+    start_time_classical_pauli=tictoc.time()
     for label_ind in range(len(A)):
         label = A[label_ind]
         
@@ -295,13 +295,13 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
         #construct the Hamiltonian matrix based on the coefficients and the basis        
         Ham_mat = Ham_mat+ coeff[label_ind]*basis
         
-    end_time_classical_pauli=time.time()
+    end_time_classical_pauli=tictoc.time()
     print('Time for constructing Hamiltonian matrix from pauli decomposition')
     print(end_time_classical_pauli-start_time_classical_pauli)    
     
-    start_time_numpy_eig=time.time()    
+    start_time_numpy_eig=tictoc.time()    
     eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
-    end_time_numpy_eig=time.time()
+    end_time_numpy_eig=tictoc.time()
     print("Eigenvalues from numpy.linalg.eig:")
     print(eigenvalues)
     print("Minimal Eigenvalue from numpy:")
@@ -310,9 +310,9 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
     print(end_time_numpy_eig-start_time_numpy_eig)
 
     # #This scipy even just compute one eigenvalue is not faster than numpy solver for large scale matrix.
-    # start_time_scipy_eigsh=time.time()
+    # start_time_scipy_eigsh=tictoc.time()
     # eigenvalues_eigsh, eigenvectors_eigsh = eigsh(Ham_mat, k=1,which='SA')
-    # end_time_scipy_eigsh=time.time()
+    # end_time_scipy_eigsh=tictoc.time()
     # print("Minimal eignevalue from scipy.linalg.eigsh:")
     # print(eigenvalues_eigsh)
     # print("Time for classical eigsh solver in scipy:")
