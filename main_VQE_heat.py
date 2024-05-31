@@ -21,7 +21,7 @@ import time
 from scipy.sparse.linalg import eigsh
 
 
-n=2 #number of qubit for one dimension.
+n=10 #number of qubit for one dimension.
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
 dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
