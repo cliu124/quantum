@@ -24,7 +24,7 @@ from scipy.sparse.linalg import eigsh
 n=2 #number of qubit for one dimension.
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
-dimension =2 #1, 2, 3, The physical dimension of heat equation. The 
+dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
 #The total qubits for the computation is n* dimension, and Hamiltonian will be in size 2**(n*dimension) * 2**(n*dimension)
 
 N=2**n #matrix size
@@ -176,11 +176,15 @@ elif quantum =='fakebackend':
         transpile_options={"seed_transpiler": seed},
     )
     
+    start_time_VQE=time.time()
     vqe = VQE(noiseless_estimator, ansatz, optimizer=optimizer, callback=store_intermediate_result)
+    end_time_VQE=time.time()
     #    vqe = VQE(noiseless_estimator, ansatz, optimizer=optimizer)
 
     result = vqe.compute_minimum_eigenvalue(operator=Hamil_Qop)
     print(f"VQE on Aer qasm simulator (no noise): {result.eigenvalue.real:.5f}")
+    print('Computing Time of VQE (no noise):')
+    print(end_time_VQE-start_time_VQE)
     
     from qiskit_aer.noise import NoiseModel
     from qiskit.providers.fake_provider import GenericBackendV2
@@ -203,9 +207,14 @@ elif quantum =='fakebackend':
     
     vqe.estimator = noisy_estimator
     
+    start_time_VQE=time.time()
     result1 = vqe.compute_minimum_eigenvalue(operator=Hamil_Qop)
+    end_time_VQE=time.time()
     
     print(f"VQE on Aer qasm simulator (with noise): {result1.eigenvalue.real:.5f}")
+    print('Computing Time of VQE (with noise):')
+    print(end_time_VQE-start_time_VQE)
+
 
 elif quantum =='backend1':
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
