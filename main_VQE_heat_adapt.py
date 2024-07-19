@@ -139,15 +139,15 @@ if quantum=='aer':
     #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
     #work for arbitrary qubit numbers
     #ansatz = EfficientSU2(Hamil_Qop.num_qubits)
-    #ansatz = EvolvedOperatorAnsatz()
-    ansatz = UCCSD()
+    ansatz = EvolvedOperatorAnsatz(operator=Hamil_Qop)
+    #ansatz = UCCSD()
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     #    vqe = VQE(estimator, ansatz, optimizer)
     
     #AdaptVQE
     adapt_vqe=AdaptVQE(vqe)
-    vqe_values, _ = adapt_vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
+    vqe_values, _ = adapt_vqe.compute_minimum_eigenvalue(Hamil_Qop)
 
     #This is for the traditional VQE
     #vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
