@@ -13,6 +13,7 @@ from qiskit.quantum_info import SparsePauliOp
 #from qiskit.circuit.library import TwoLocal
 #from qiskit.circuit.library import NLocal
 from qiskit.circuit.library import EfficientSU2, EvolvedOperatorAnsatz
+from qiskit_nature.second_q.circuit.library import UCCSD
 #from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 #from qiskit_aer import Aer
@@ -138,7 +139,8 @@ if quantum=='aer':
     #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
     #work for arbitrary qubit numbers
     #ansatz = EfficientSU2(Hamil_Qop.num_qubits)
-    ansatz = EvolvedOperatorAnsatz()
+    #ansatz = EvolvedOperatorAnsatz()
+    ansatz = UCCSD()
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     #    vqe = VQE(estimator, ansatz, optimizer)
