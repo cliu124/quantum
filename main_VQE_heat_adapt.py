@@ -20,7 +20,7 @@ from qiskit_algorithms.state_fidelities import ComputeUncompute
 from qiskit_ibm_runtime import QiskitRuntimeService
 import time
 from scipy.sparse.linalg import eigsh
-
+from qiskit.circuit.quantumcircuit import QuantumCircuit
 
 n=3 #number of qubit for one dimension.
 classical=1
@@ -139,7 +139,7 @@ if quantum=='aer':
     #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
     #work for arbitrary qubit numbers
     #ansatz = EfficientSU2(Hamil_Qop.num_qubits)
-    ansatz = EvolvedOperatorAnsatz(operator=Hamil_Qop)
+    ansatz = EvolvedOperatorAnsatz(QuantumCircuit(n))
     #ansatz = UCCSD()
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
