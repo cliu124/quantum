@@ -143,8 +143,8 @@ if quantum=='aer':
     
     #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
     #work for arbitrary qubit numbers
-    #ansatz = EfficientSU2(Hamil_Qop.num_qubits)
-    ansatz = TwoLocal(num_qubits=Hamil_Qop.num_qubits)
+    ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+    #ansatz = TwoLocal(num_qubits=Hamil_Qop.num_qubits)
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     #    vqe = VQE(estimator, ansatz, optimizer)
