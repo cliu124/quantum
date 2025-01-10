@@ -67,16 +67,16 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors):
 
     return eigvals.real
 
-# Example usage:
-if __name__ == "__main__":
-    # Define a sparse Hamiltonian (example: H = X0Z1 + Z0X1)
-    
-    n=10 #number of qubit for one dimension.
-    classical=1
-    quantum='aer' #['aer','backend1','fackbackend']
-    dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
-    #The total qubits for the computation is n* dimension, and Hamiltonian will be in size 2**(n*dimension) * 2**(n*dimension)
-    
+def heat_tridiagonal_quantum_encoding(n, dimension):
+    """
+        obtain the quantum encoding of Laplacian of heat equations
+        after finite difference discretization leading to a tridiagonal matrix
+        
+        n: qubit numbers
+        dimension: the dimension of Laplacian operator
+        Note: This quantum encoding is almost trivial when extending to higher dimension due to the Kroncker product nature of Pauli string representation
+    """
+
     N=2**n #matrix size
     h=1/(N+1) #step size
     
@@ -136,7 +136,6 @@ if __name__ == "__main__":
         A=Axx+Ayy+Azz
         coeff=coeff+coeff+coeff
         
-        
     #reverse the sign for all coefficients as VQE only compute minimal eigenvalue, but we want to solve maximum eigenvalue
     coeff=[ -i for i in coeff]        
     
@@ -145,8 +144,59 @@ if __name__ == "__main__":
     print(end_time_pauli-start_time_pauli)
     #-------------------
     #construct the Hamiltonian operator using labels (A) and coeff
-    hamiltonian = SparsePauliOp(A, coeff)
+    #hamiltonian = SparsePauliOp(A, coeff)
+
+    return A, coeff
+
+def SparsePauliOp2Matrix(A,coeff):
     
+    #Four different Pauli basis
+    I=np.array([[1,0],[0,1]])
+    X=np.array([[0,1],[1,0]])
+    Y=np.array([[0,-1j],[1j,0]])
+    Z=np.array([[1,0],[0,-1]])
+    
+    #initialize the zero Hamiltonian matrix
+    Ham_mat=np.zeros((2**(n*dimension),2**(n*dimension)))
+    
+    start_time_classical_pauli=time.time()
+    for label_ind in range(len(A)):
+        label = A[label_ind]
+        
+        #Take the Kronecker product based on the label to construct the basis 
+        basis=1
+        for char_ind in range(len(label)):
+            if label[char_ind] =='I':
+                basis = np.kron(basis,I)
+            elif label[char_ind] =='X':
+                basis = np.kron(basis,X)
+            elif label[char_ind] =='Y':
+                basis = np.kron(basis,Y)
+            elif label[char_ind] =='Z':
+                basis = np.kron(basis,Z)
+                
+        #construct the Hamiltonian matrix based on the coefficients and the basis        
+        Ham_mat = Ham_mat+ coeff[label_ind]*basis
+        
+    end_time_classical_pauli=time.time()
+    print('Time for constructing Hamiltonian matrix from pauli decomposition')
+    print(end_time_classical_pauli-start_time_classical_pauli)    
+    
+    return Ham_mat
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Define a sparse Hamiltonian (example: H = X0Z1 + Z0X1)
+    
+    n=10 #number of qubit for one dimension.
+    classical=1
+    quantum='aer' #['aer','backend1','fackbackend']
+    dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
+    #The total qubits for the computation is n* dimension, and Hamiltonian will be in size 2**(n*dimension) * 2**(n*dimension)
+    
+    A,coeff=heat_tridiagonal_quantum_encoding(n, dimension)
+    hamiltonian=SparsePauliOp(A,coeff)
     
     #print(Hamil_Qop)
     
@@ -160,62 +210,25 @@ if __name__ == "__main__":
     # Run the Krylov subspace method
     num_krylov_vectors = 2
     energies = quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors)
-    print("Approximate eigenvalues:", energies)
+    print("Approximate eigenvalues from quantum Krylov algorithm:", energies)
 
-
-    
     if classical:#If 1, then convert back to classical Hamiltonian matrix and use numpy to compute eigenvalues
-            
-        #Four different Pauli basis
-        I=np.array([[1,0],[0,1]])
-        X=np.array([[0,1],[1,0]])
-        Y=np.array([[0,-1j],[1j,0]])
-        Z=np.array([[1,0],[0,-1]])
-        
-        #initialize the zero Hamiltonian matrix
-        Ham_mat=np.zeros((2**(n*dimension),2**(n*dimension)))
-        
-        start_time_classical_pauli=time.time()
-        for label_ind in range(len(A)):
-            label = A[label_ind]
-            
-            #Take the Kronecker product based on the label to construct the basis 
-            basis=1
-            for char_ind in range(len(label)):
-                if label[char_ind] =='I':
-                    basis = np.kron(basis,I)
-                elif label[char_ind] =='X':
-                    basis = np.kron(basis,X)
-                elif label[char_ind] =='Y':
-                    basis = np.kron(basis,Y)
-                elif label[char_ind] =='Z':
-                    basis = np.kron(basis,Z)
-                    
-            #construct the Hamiltonian matrix based on the coefficients and the basis        
-            Ham_mat = Ham_mat+ coeff[label_ind]*basis
-            
-        end_time_classical_pauli=time.time()
-        print('Time for constructing Hamiltonian matrix from pauli decomposition')
-        print(end_time_classical_pauli-start_time_classical_pauli)    
-        
+        Ham_mat=SparsePauliOp2Matrix(A,coeff)
         start_time_numpy_eig=time.time()    
         eigenvalues,eigenvectors=np.linalg.eig(Ham_mat)
         end_time_numpy_eig=time.time()
-        print("Eigenvalues from numpy.linalg.eig:")
-        print(eigenvalues)
+          
+        # print("Eigenvalues from numpy.linalg.eig:"
+        # print(eigenvalues)
+        
         print("Minimal Eigenvalue from numpy:")
         print(np.min(eigenvalues))  
         print("Time for classical eig solver in numpy:")
         print(end_time_numpy_eig-start_time_numpy_eig)
-    
-        # #This scipy even just compute one eigenvalue is not faster than numpy solver for large scale matrix.
-        # start_time_scipy_eigsh=time.time()
-        # eigenvalues_eigsh, eigenvectors_eigsh = eigsh(Ham_mat, k=1,which='SA')
-        # end_time_scipy_eigsh=time.time()
-        # print("Minimal eignevalue from scipy.linalg.eigsh:")
-        # print(eigenvalues_eigsh)
-        # print("Time for classical eigsh solver in scipy:")
-        # print(end_time_scipy_eigsh-start_time_scipy_eigsh)
-    
-    print("Analytical solution for the heat equation (D=1):")
+
+    print("Analytical solution for the heat equation (for various dimension):")
     print(np.pi**2*dimension)
+        
+                
+       
+    
