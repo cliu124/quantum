@@ -5,6 +5,34 @@ import time
 from itertools import permutations
 
 
+# Function to perform matrix-free multiplication
+def sparse_pauli_op_vector_multiply(sparse_op, state):
+    """
+    Multiply a SparsePauliOp with a Statevector without forming the full matrix.
+    
+    Parameters:
+    - sparse_op: SparsePauliOp representing the operator (matrix)
+    - state: Statevector representing the quantum state (vector)
+    
+    Returns:
+    - A Statevector representing the result of the multiplication.
+    """
+    # Initialize the result as a zero vector
+    result_state = Statevector([0] * len(state.data))
+    
+    # Iterate over the terms in SparsePauliOp
+    for pauli, coeff in zip(sparse_op.paulis, sparse_op.coeffs):
+        # Copy the state to avoid modifying the original state
+        temp_state = state.copy()
+        
+        # Apply the current Pauli operator
+        temp_state = temp_state.evolve(pauli)
+        
+        # Accumulate the weighted result
+        result_state += coeff * temp_state
+    
+    return result_state
+
 def apply_hamiltonian(hamiltonian, statevector):
     """
     Apply the Hamiltonian to a statevector.
@@ -17,8 +45,12 @@ def apply_hamiltonian(hamiltonian, statevector):
         Statevector: The resulting statevector after applying the Hamiltonian.
     """
     #return Statevector(hamiltonian.to_matrix() @ statevector.data)
-    return statevector.evolve(hamiltonian.to_operator())
-
+    #return statevector.evolve(hamiltonian.to_operator())
+    result_state=sparse_pauli_op_vector_multiply(hamiltonian, statevector)
+    
+    return result_state
+    
+    
 def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors):
     """
     Implement a quantum Krylov subspace algorithm to approximate the ground state energy of a Hamiltonian.
@@ -189,7 +221,7 @@ def SparsePauliOp2Matrix(A,coeff):
 if __name__ == "__main__":
     # Define a sparse Hamiltonian (example: H = X0Z1 + Z0X1)
     
-    n=10 #number of qubit for one dimension.
+    n=2 #number of qubit for one dimension.
     classical=1
     quantum='aer' #['aer','backend1','fackbackend']
     dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
