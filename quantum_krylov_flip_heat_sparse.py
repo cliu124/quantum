@@ -1,4 +1,5 @@
-from qiskit import QuantumCircuit, Aer, execute
+from qiskit import QuantumCircuit #, Aer, execute
+from qiskit_aer import Aer
 from qiskit.quantum_info import SparsePauliOp, Statevector
 import numpy as np
 import time
@@ -148,7 +149,8 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors):
     backend = Aer.get_backend('statevector_simulator')
 
     # Simulate the initial state
-    job = execute(initial_state, backend)
+    job = backend.run(initial_state) 
+#execute(initial_state, backend)
     result = job.result()
     psi_0 = Statevector(result.get_statevector())
 

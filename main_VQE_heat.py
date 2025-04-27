@@ -221,9 +221,11 @@ elif quantum =='backend1':
     from qiskit.primitives import BackendEstimator, BackendSampler
 
     #This is using hardware from IBM
-    QiskitRuntimeService.save_account(channel="ibm_quantum", token="f5375012c169f40d9130b71c39bb6d5ea808f7de8d6ce8ac869235ced986b58ec47c099d074c5546ca61af335601c0d0f13d4f8537e867789625756b95670b8f",overwrite=True)
-    service = QiskitRuntimeService(channel='ibm_quantum')
-    #service = QiskitRuntimeService(name="UConn_quantum_credit",instance="UConn")
+    #instance of 10 mins free time per month
+    service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:8be1d03e-b2db-4077-8702-2d0958b27252::")
+
+    #Quantum credit program
+    service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:9852b119-18cc-4f58-ac25-2b008a7aeb2f::")
     backend = service.least_busy(operational=True, simulator=False)
 
     ansatz = EfficientSU2(Hamil_Qop.num_qubits)
