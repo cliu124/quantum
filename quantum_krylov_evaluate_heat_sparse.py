@@ -52,7 +52,7 @@ def apply_hamiltonian(hamiltonian, statevector):
     return result_state
     
     
-def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors):
+def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quantum_backend):
     """
     Implement a quantum Krylov subspace algorithm to approximate the ground state energy of a Hamiltonian.
 
@@ -65,7 +65,21 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors):
         energies (list): Approximate eigenvalues from the Krylov subspace.
     """
     # Set up the backend
-    backend = Aer.get_backend('statevector_simulator')
+    if quantum_backend=='aer':
+    
+        backend = Aer.get_backend('statevector_simulator')
+        
+    elif quantum_backend=='backend1':
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+        from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        
+        #10min/month free allocation
+        service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:8be1d03e-b2db-4077-8702-2d0958b27252::")
+    
+        #Quantum credit program
+        service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:9852b119-18cc-4f58-ac25-2b008a7aeb2f::")
+        backend = service.least_busy(operational=True, simulator=False)
 
     # Simulate the initial state
     job = backend.run(initial_state) 
@@ -225,7 +239,7 @@ if __name__ == "__main__":
     
     n=2 #number of qubit for one dimension.
     classical=1
-    quantum='aer' #['aer','backend1','fackbackend']
+    quantum_backend='aer' #['aer','backend1','fackbackend']
     dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
     #The total qubits for the computation is n* dimension, and Hamiltonian will be in size 2**(n*dimension) * 2**(n*dimension)
     
@@ -243,7 +257,7 @@ if __name__ == "__main__":
 
     # Run the Krylov subspace method
     num_krylov_vectors = 2**n
-    energies = quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors)
+    energies = quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quantum_backend)
     print("Approximate eigenvalues from quantum Krylov algorithm:", energies)
 
     if classical:#If 1, then convert back to classical Hamiltonian matrix and use numpy to compute eigenvalues
