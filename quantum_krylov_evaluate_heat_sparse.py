@@ -77,7 +77,7 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quant
     elif quantum_backend=='backend1':
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
         from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2, StatevectorSampler, StatevectorEstimator, Estimator
-        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2
         
         #10min/month free allocation
         service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:8be1d03e-b2db-4077-8702-2d0958b27252::")
@@ -99,11 +99,19 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quant
         #estimator = Estimator()
         #expectation_value = estimator.run(initial_state, hamiltonian).result().values[0]
         
-        estimator = StatevectorEstimator()
-        result = estimator.run([(initial_state,hamiltonian)]).result()[0]
-        for idx, pauli in enumerate(hamiltonian): 
-            print(pauli)
-            print(result.data.evs[idx])
+        # Trial using StatevectorEstimator that is working
+        #estimator = StatevectorEstimator()
+        #result = estimator.run([(initial_state,hamiltonian)]).result()[0]
+        #print(result.data.evs)
+        
+        # 
+        estimator=EstimatorV2(backend)
+        job = estimator.run([(initial_state, hamiltonian)])
+        print(job.result())
+        
+        #for idx, pauli in enumerate(hamiltonian): 
+        #    print(pauli)
+        #    print(result.data.evs[idx])
 
         
         
