@@ -76,14 +76,14 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quant
 
     elif quantum_backend=='backend1':
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-        from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2, StatevectorSampler, Estimator
+        from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2, StatevectorSampler, StatevectorEstimator, Estimator
         from qiskit_ibm_runtime import QiskitRuntimeService
         
         #10min/month free allocation
         service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:8be1d03e-b2db-4077-8702-2d0958b27252::")
     
         #Quantum credit program
-        service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:9852b119-18cc-4f58-ac25-2b008a7aeb2f::")
+        #service = QiskitRuntimeService(channel="ibm_cloud",token="",instance="crn:v1:bluemix:public:quantum-computing:us-east:a/f84b32721d2f4ddfa35b85de7b1230a5:9852b119-18cc-4f58-ac25-2b008a7aeb2f::")
         backend = service.least_busy(operational=True, simulator=False)
 
         ### Simulate the initial state
@@ -95,10 +95,15 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quant
         #quasi_dist = result[0].data.meas.get_quasi_probs()
         #psi_0 = Statevector(quasi_dist)
         
-        # trial using 
-        estimator = Estimator()
-        expectation_value = estimator.run(initial_state, hamiltonian).result().values[0]
-        print(expectation_value)
+        # trial using Estimator, working version!!!! But Estimator will depreciate 
+        #estimator = Estimator()
+        #expectation_value = estimator.run(initial_state, hamiltonian).result().values[0]
+        
+        estimator = StatevectorEstimator()
+        result = estimator.run([(initial_state,hamiltonian)]).result()[0]
+        for idx, pauli in enumerate(hamiltonian): 
+            print(pauli)
+            print(result.data.evs[idx])
 
         
         
