@@ -21,7 +21,7 @@ import time
 from scipy.sparse.linalg import eigsh
 
 
-n=10 #number of qubit for one dimension.
+n=2 #number of qubit for one dimension.
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
 dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
@@ -118,6 +118,36 @@ def store_intermediate_result(eval_count, parameters, mean, std):
 #     steps.append(step)
 #     print(f"count: {counts[-1]}, value: {values[-1]}, step: {steps[-1]}")
 
+def cost_func(params, ansatz, Hamil_Qop, estimator):
+    """Return estimate of energy from estimator
+
+    Parameters:
+        params (ndarray): Array of ansatz parameters
+        ansatz (QuantumCircuit): Parameterized ansatz circuit
+        Hamil_Qop (SparsePauliOp): Operator representation of Hamiltonian
+        estimator (EstimatorV2): Estimator primitive instance
+        cost_history_dict: Dictionary for storing intermediate results
+
+    Returns:
+        float: Energy estimate
+    """
+    pub = (ansatz, [Hamil_Qop], [params])
+    result = estimator.run(pubs=[pub]).result()
+    energy = result[0].data.evs[0]
+
+    cost_history_dict["iters"] += 1
+    cost_history_dict["prev_vector"] = params
+    cost_history_dict["cost_history"].append(energy)
+    print(f"Iters. done: {cost_history_dict['iters']} [Current cost: {energy}]")
+
+    return energy
+
+
+cost_history_dict = {
+    "prev_vector": None,
+    "iters": 0,
+    "cost_history": [],
+}
 
 
 if quantum=='aer':
@@ -218,7 +248,9 @@ elif quantum =='fakebackend':
 
 elif quantum =='backend1':
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-    from qiskit.primitives import BackendEstimator, BackendSampler, EstimatorV2, SamplerV2
+    from qiskit.primitives import BackendEstimator, BackendSampler 
+    from qiskit_ibm_runtime import EstimatorV2, SamplerV2, Session
+    from scipy.optimize import minimize
 
     #This is using hardware from IBM
     #instance of 10 mins free time per month
@@ -229,22 +261,40 @@ elif quantum =='backend1':
     backend = service.least_busy(operational=True, simulator=False)
 
     ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+    #ansatz.decompose().draw("mpl", style="iqp")
     
     # ADDED PART BELOW
     target = backend.target
     pm = generate_preset_pass_manager(target=target, optimization_level=3)
     
     ansatz_isa = pm.run(ansatz)
+    #ansatz_isa.draw(output="mpl", idle_wires=False, style="iqp")
     hamiltonian_isa = Hamil_Qop.apply_layout(layout=ansatz_isa.layout)
-    estimator = EstimatorV2(backend=backend)
-    sampler = SamplerV2(backend=backend)
+    estimator = EstimatorV2(backend)
+    #sampler = SamplerV2(backend)
     #fidelity = ComputeUncompute(sampler)
 
     start_time_VQE=time.time()
-    vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
-    #    vqe = VQE(estimator, ansatz, optimizer)
-    vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
-    vqe_values = vqe_result.eigenvalue
+    
+    num_params = ansatz.num_parameters
+    print('num_params=',num_params)
+    x0 = 2 * np.pi * np.random.random(num_params)
+    print('x0=',x0)
+    
+    with Session(backend=backend) as session:
+        estimator = EstimatorV2(mode=session)
+        estimator.options.default_shots = 10000
+    
+        res = minimize(
+            cost_func,
+            x0,
+            args=(ansatz_isa, hamiltonian_isa, estimator),
+            method="cobyla",
+        )
+    #This VQE is not compatible with the qiskit>=1.4.1, and qiskit-ibm-runtime>0.38
+    #vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
+    #vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
+    #vqe_values = vqe_result.eigenvalue
     
     end_time_VQE=time.time()
     print('VQE')
