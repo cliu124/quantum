@@ -251,6 +251,7 @@ elif quantum =='backend1':
     from qiskit.primitives import BackendEstimator, BackendSampler 
     from qiskit_ibm_runtime import EstimatorV2, SamplerV2, Session
     from scipy.optimize import minimize
+    import pickle
 
     #This is using hardware from IBM
     #instance of 10 mins free time per month
@@ -270,7 +271,7 @@ elif quantum =='backend1':
     ansatz_isa = pm.run(ansatz)
     #ansatz_isa.draw(output="mpl", idle_wires=False, style="iqp")
     hamiltonian_isa = Hamil_Qop.apply_layout(layout=ansatz_isa.layout)
-    estimator = EstimatorV2(backend)
+    #estimator = EstimatorV2(backend)
     #sampler = SamplerV2(backend)
     #fidelity = ComputeUncompute(sampler)
 
@@ -291,17 +292,22 @@ elif quantum =='backend1':
             args=(ansatz_isa, hamiltonian_isa, estimator),
             method="cobyla",
         )
+
+
+    with open('saved_dictionary.pkl', 'wb') as f:
+        pickle.dump(cost_history_dict, f)
+
     #This VQE is not compatible with the qiskit>=1.4.1, and qiskit-ibm-runtime>0.38
     #vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     #vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
     #vqe_values = vqe_result.eigenvalue
     
     end_time_VQE=time.time()
-    print('VQE')
-    print(vqe_result)
+    #print('VQE')
+    #print(vqe_result)
     
-    print('Minimal eigenvalue from VQE is:')
-    print(vqe_values)
+    #print('Minimal eigenvalue from VQE is:')
+    #print(vqe_values)
     
     print('Computing Time of VQE:')
     print(end_time_VQE-start_time_VQE)
