@@ -167,8 +167,8 @@ if quantum=='aer':
     
     #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
     #work for arbitrary qubit numbers
-    #ansatz = EfficientSU2(Hamil_Qop.num_qubits)
-    ansatz = TwoLocal(num_qubits=Hamil_Qop.num_qubits)
+    ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+    #ansatz = TwoLocal(num_qubits=Hamil_Qop.num_qubits)
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
     #    vqe = VQE(estimator, ansatz, optimizer)
@@ -292,10 +292,14 @@ elif quantum =='backend1':
             args=(ansatz_isa, hamiltonian_isa, estimator),
             method="cobyla",
         )
-
+    
+        
+    print(res)
 
     with open('saved_dictionary.pkl', 'wb') as f:
         pickle.dump(cost_history_dict, f)
+        
+    session.close()    
 
     #This VQE is not compatible with the qiskit>=1.4.1, and qiskit-ibm-runtime>0.38
     #vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
