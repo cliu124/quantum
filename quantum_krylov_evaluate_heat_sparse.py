@@ -74,6 +74,34 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quant
         result = job.result()
         psi_0 = Statevector(result.get_statevector())
 
+        # Initialize Krylov subspace vectors
+        krylov_vectors = [psi_0]
+        for _ in range(1, num_krylov_vectors):
+            # Apply Hamiltonian to the previous vector
+            h_psi = apply_hamiltonian(hamiltonian, krylov_vectors[-1])
+    
+            # Orthonormalize
+            for vec in krylov_vectors:
+                overlap = np.vdot(vec.data, h_psi.data)
+                h_psi = Statevector(h_psi.data - overlap * vec.data)
+    
+            # Normalize the vector
+            norm = np.linalg.norm(h_psi.data)
+            h_psi = Statevector(h_psi.data / norm)
+    
+            krylov_vectors.append(h_psi)
+    
+        # Construct the Krylov Hamiltonian (H_k)
+        H_k = np.zeros((num_krylov_vectors, num_krylov_vectors), dtype=complex)
+        for i, vi in enumerate(krylov_vectors):
+            for j, vj in enumerate(krylov_vectors):
+                H_k[i, j] = np.vdot(vi.data, apply_hamiltonian(hamiltonian, vj).data)
+    
+        # Solve the eigenvalue problem for H_k
+        eigvals, eigvecs = np.linalg.eigh(H_k)
+    
+        return eigvals.real
+
     elif quantum_backend=='backend1':
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
         from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2, StatevectorSampler, StatevectorEstimator, Estimator
@@ -105,6 +133,7 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quant
         #print(result.data.evs)
         
         # 
+        #This can work to call hardware!!!!!
         estimator=EstimatorV2(backend)
         job = estimator.run([(initial_state, hamiltonian)])
         print(job.result())
@@ -112,37 +141,34 @@ def quantum_krylov_subspace(hamiltonian, initial_state, num_krylov_vectors,quant
         #for idx, pauli in enumerate(hamiltonian): 
         #    print(pauli)
         #    print(result.data.evs[idx])
-
         
-        
-
-    # Initialize Krylov subspace vectors
-    krylov_vectors = [psi_0]
-    for _ in range(1, num_krylov_vectors):
-        # Apply Hamiltonian to the previous vector
-        h_psi = apply_hamiltonian(hamiltonian, krylov_vectors[-1])
-
-        # Orthonormalize
-        for vec in krylov_vectors:
-            overlap = np.vdot(vec.data, h_psi.data)
-            h_psi = Statevector(h_psi.data - overlap * vec.data)
-
-        # Normalize the vector
-        norm = np.linalg.norm(h_psi.data)
-        h_psi = Statevector(h_psi.data / norm)
-
-        krylov_vectors.append(h_psi)
-
-    # Construct the Krylov Hamiltonian (H_k)
-    H_k = np.zeros((num_krylov_vectors, num_krylov_vectors), dtype=complex)
-    for i, vi in enumerate(krylov_vectors):
-        for j, vj in enumerate(krylov_vectors):
-            H_k[i, j] = np.vdot(vi.data, apply_hamiltonian(hamiltonian, vj).data)
-
-    # Solve the eigenvalue problem for H_k
-    eigvals, eigvecs = np.linalg.eigh(H_k)
-
-    return eigvals.real
+        # Initialize Krylov subspace vectors
+        krylov_vectors = [psi_0]
+        for _ in range(1, num_krylov_vectors):
+            # Apply Hamiltonian to the previous vector
+            h_psi = apply_hamiltonian(hamiltonian, krylov_vectors[-1])
+    
+            # Orthonormalize
+            for vec in krylov_vectors:
+                overlap = np.vdot(vec.data, h_psi.data)
+                h_psi = Statevector(h_psi.data - overlap * vec.data)
+    
+            # Normalize the vector
+            norm = np.linalg.norm(h_psi.data)
+            h_psi = Statevector(h_psi.data / norm)
+    
+            krylov_vectors.append(h_psi)
+    
+        # Construct the Krylov Hamiltonian (H_k)
+        H_k = np.zeros((num_krylov_vectors, num_krylov_vectors), dtype=complex)
+        for i, vi in enumerate(krylov_vectors):
+            for j, vj in enumerate(krylov_vectors):
+                H_k[i, j] = np.vdot(vi.data, apply_hamiltonian(hamiltonian, vj).data)
+    
+        # Solve the eigenvalue problem for H_k
+        eigvals, eigvecs = np.linalg.eigh(H_k)
+    
+        return eigvals.real
 
 def heat_tridiagonal_quantum_encoding(n, dimension):
     """

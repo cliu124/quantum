@@ -218,7 +218,7 @@ elif quantum =='fakebackend':
 
 elif quantum =='backend1':
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-    from qiskit.primitives import BackendEstimator, BackendSampler
+    from qiskit.primitives import BackendEstimator, BackendSampler, EstimatorV2, SamplerV2
 
     #This is using hardware from IBM
     #instance of 10 mins free time per month
@@ -236,9 +236,9 @@ elif quantum =='backend1':
     
     ansatz_isa = pm.run(ansatz)
     hamiltonian_isa = Hamil_Qop.apply_layout(layout=ansatz_isa.layout)
-    estimator = BackendEstimator(backend=backend)
-    sampler = BackendSampler(backend=backend)
-    fidelity = ComputeUncompute(sampler)
+    estimator = EstimatorV2(backend=backend)
+    sampler = SamplerV2(backend=backend)
+    #fidelity = ComputeUncompute(sampler)
 
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
