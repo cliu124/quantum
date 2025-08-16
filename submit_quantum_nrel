@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH --account=uconnfluent
+#SBATCH --nodes=1
+#SBATCH --ntasks=96
+#SBATCH --partition=medmem
+#SBATCH --time=48:00:00
+#SBATCH --mail-user=chang_liu@uconn.edu      # Destination email address (Change to YOUR email)
+#SBATCH --mail-type=ALL                       # Event(s) that triggers email notification
+#SBATCH --job-name=quantum
+#SBATCH --output=quantum_output_%j
+export SLURM_EXPORT_ENV=ALL
+#export I_MPI_FABRICS=shm,tcp
+
+##the slurm number to restart simulation... This need full state to be stored.
+SUBMITDIR=$SLURM_SUBMIT_DIR
+WORKDIR=/scratch/changliu0520/quantum_$SLURM_JOB_ID
+mkdir -p "$WORKDIR" && cp -r main_VQE_heat.py "$WORKDIR" && cp -r quantum_krylov*.py "$WORKDIR" && cp -r poly* "$WORKDIR" && cp submit_quantum_nrel "$WORKDIR" && cd "$WORKDIR" || exit -1
+
+source /home/changliu0520/qiskit_env/bin/activate
+
+python3 -u main_VQE_heat.py
+
+cd "$SUBMITDIR" && cp quantum_output_$SLURM_JOB_ID "$WORKDIR"
