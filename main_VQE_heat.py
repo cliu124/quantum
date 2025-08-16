@@ -21,6 +21,7 @@ import time
 from scipy.sparse.linalg import eigsh
 
 
+
 n=2 #number of qubit for one dimension.
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
