@@ -1,12 +1,13 @@
 #!/bin/bash
 #SBATCH --account=uconnfluent
 #SBATCH --nodes=1
-#SBATCH --ntasks=96
+#SBATCH --ntasks=1
 #SBATCH --partition=medmem
 #SBATCH --time=48:00:00
 #SBATCH --mail-user=chang_liu@uconn.edu      # Destination email address (Change to YOUR email)
 #SBATCH --mail-type=ALL                       # Event(s) that triggers email notification
 #SBATCH --job-name=quantum
+#SBATCH --mem=16G ##medmem partition maximal 1TB
 #SBATCH --output=quantum_output_%j
 export SLURM_EXPORT_ENV=ALL
 #export I_MPI_FABRICS=shm,tcp
