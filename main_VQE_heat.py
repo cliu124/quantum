@@ -105,11 +105,11 @@ print('Time for converting Pauli decomposition to Hamiltonian operator:')
 print(start_time_SparsePauliOp-end_time_SparsePauliOp)
 
 #setup classical optimizer
-#optimizer = optimizers.ADAM()
 #optimizer = optimizers.SPSA()
-#optimizer = optimizers.COBYLA()
-optimizer = optimizers.SLSQP()
+#optimizer = optimizers.COBYLA() #quantum hardware results in the paper. 
+optimizer = optimizers.SLSQP() #most results in the paper
 #optimizer = optimizers.P_BFGS()
+#optimizer = optimizers.ADAM()
 
 
 #ansatz.decompose().draw("mpl")
