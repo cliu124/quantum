@@ -2,7 +2,9 @@
 """
 Created on Sat May 11 20:13:53 2024
 
-@author: chang
+@author: Chang Liu at University of Connecticut.
+https://changliulab.engineering.uconn.edu/
+Email: chang_liu@uconn.edu
 """
 import numpy as np
 from itertools import permutations
@@ -10,9 +12,7 @@ import functools as ft
 from qiskit_algorithms import VQE, optimizers
 from qiskit.quantum_info.operators import Operator
 from qiskit.quantum_info import SparsePauliOp
-#from qiskit.circuit.library import TwoLocal
-#from qiskit.circuit.library import NLocal
-from qiskit.circuit.library import EfficientSU2, TwoLocal
+from qiskit.circuit.library import EfficientSU2, TwoLocal, PauliTwoDesign
 #from qiskit.primitives import Sampler, Estimator
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 #from qiskit_aer import Aer
@@ -22,7 +22,7 @@ from scipy.sparse.linalg import eigsh
 
 
 
-n=2 #number of qubit for one dimension.
+n=5 #number of qubit for one dimension.
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
 dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
@@ -96,11 +96,22 @@ print('Time for construct Pauli decomposition of tridiagonal matrices')
 print(end_time_pauli-start_time_pauli)
 #-------------------
 #construct the Hamiltonian operator using labels (A) and coeff
+
+start_time_SparsePauliOp=time.time()
 Hamil_Qop = SparsePauliOp(A, coeff)
+end_time_SparsePauliOp=time.time()
 print(Hamil_Qop)
+print('Time for converting Pauli decomposition to Hamiltonian operator:')
+print(start_time_SparsePauliOp-end_time_SparsePauliOp)
 
 #setup classical optimizer
+#optimizer = optimizers.ADAM()
+#optimizer = optimizers.SPSA()
+#optimizer = optimizers.COBYLA()
 optimizer = optimizers.SLSQP()
+#optimizer = optimizers.P_BFGS()
+
+
 #ansatz.decompose().draw("mpl")
 
 counts = []
@@ -170,9 +181,9 @@ if quantum=='aer':
     #work for arbitrary qubit numbers
     ansatz = EfficientSU2(Hamil_Qop.num_qubits)
     #ansatz = TwoLocal(num_qubits=Hamil_Qop.num_qubits)
+    #ansatz = PauliTwoDesign(num_qubits=Hamil.Qop.num_qubits)
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
-    #    vqe = VQE(estimator, ansatz, optimizer)
 
     vqe_result = vqe.compute_minimum_eigenvalue(operator = Hamil_Qop)
     vqe_values = vqe_result.eigenvalue
@@ -190,11 +201,15 @@ if quantum=='aer':
 elif quantum =='fakebackend':
     
     # define ansatz and optimizer
-    from qiskit.circuit.library import TwoLocal
+    # from qiskit.circuit.library import TwoLocal
     
     iterations = 125
-    ansatz=TwoLocal(rotation_blocks="ry", entanglement_blocks="cz")
-    # ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+    ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+    #ansatz = TwoLocal(num_qubits=Hamil_Qop.num_qubits)
+    #ansatz = PauliTwoDesign(num_qubits=Hamil.Qop.num_qubits)
+
+    #### ansatz=TwoLocal(rotation_blocks="ry", entanglement_blocks="cz")
+
     
     from qiskit_algorithms.utils import algorithm_globals
     from qiskit_aer.primitives import Estimator as AerEstimator
@@ -365,14 +380,23 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
     print("Time for classical eig solver in numpy:")
     print(end_time_numpy_eig-start_time_numpy_eig)
 
-    # #This scipy even just compute one eigenvalue is not faster than numpy solver for large scale matrix.
-    # start_time_scipy_eigsh=time.time()
-    # eigenvalues_eigsh, eigenvectors_eigsh = eigsh(Ham_mat, k=1,which='SA')
-    # end_time_scipy_eigsh=time.time()
-    # print("Minimal eignevalue from scipy.linalg.eigsh:")
-    # print(eigenvalues_eigsh)
-    # print("Time for classical eigsh solver in scipy:")
-    # print(end_time_scipy_eigsh-start_time_scipy_eigsh)
+    
+    start_time_SparsePauliOp_matrix=time.time()
+    Hamil_Qop = SparsePauliOp.from_operator(Ham_mat)
+    end_time_SparsePauliOp_matrix=time.time()
+    print(Hamil_Qop)
+    print('Time for converting the classical matrix to Hamiltonian operator:')
+    print(start_time_SparsePauliOp_matrix-end_time_SparsePauliOp_matrix)
 
-print("Analytical solution for the heat equation (D=1):")
+
+    # #This scipy even just compute one eigenvalue is not faster than numpy solver for large scale matrix.
+    start_time_scipy_eigsh=time.time()
+    eigenvalues_eigsh, eigenvectors_eigsh = eigsh(Ham_mat, k=1,which='SM')
+    end_time_scipy_eigsh=time.time()
+    print("Minimal eignevalue from scipy.linalg.eigsh:")
+    print(eigenvalues_eigsh)
+    print("Time for classical eigsh solver in scipy:")
+    print(end_time_scipy_eigsh-start_time_scipy_eigsh)
+
+print("Analytical solution for the heat equation in d dimension:")
 print(np.pi**2*dimension)
