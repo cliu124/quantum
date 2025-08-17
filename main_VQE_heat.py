@@ -23,10 +23,12 @@ from scipy.sparse.linalg import eigsh
 
 
 n=5 #number of qubit for one dimension.
+print('Qubit number =', n)
 classical=1
 quantum='aer' #['aer','backend1','fackbackend']
 dimension =1 #1, 2, 3, The physical dimension of heat equation. The 
 #The total qubits for the computation is n* dimension, and Hamiltonian will be in size 2**(n*dimension) * 2**(n*dimension)
+print('Spatial dimension of the diffusion equation = ', dimension)
 
 N=2**n #matrix size
 h=1/(N+1) #step size
@@ -102,7 +104,7 @@ Hamil_Qop = SparsePauliOp(A, coeff)
 end_time_SparsePauliOp=time.time()
 print(Hamil_Qop)
 print('Time for converting Pauli decomposition to Hamiltonian operator:')
-print(start_time_SparsePauliOp-end_time_SparsePauliOp)
+print(end_time_SparsePauliOp-start_time_SparsePauliOp)
 
 #setup classical optimizer
 #optimizer = optimizers.SPSA()
@@ -110,7 +112,7 @@ print(start_time_SparsePauliOp-end_time_SparsePauliOp)
 optimizer = optimizers.SLSQP() #most results in the paper
 #optimizer = optimizers.P_BFGS()
 #optimizer = optimizers.ADAM()
-
+print(optimizer)
 
 #ansatz.decompose().draw("mpl")
 
@@ -179,10 +181,11 @@ if quantum=='aer':
     
     #from https://learning.quantum.ibm.com/tutorial/variational-quantum-eigensolver
     #work for arbitrary qubit numbers
-    ansatz = EfficientSU2(Hamil_Qop.num_qubits)
+    #ansatz = EfficientSU2(Hamil_Qop.num_qubits)
     ansatz=TwoLocal(num_qubits=Hamil_Qop.num_qubits, rotation_blocks=['rx','ry'],entanglement_blocks='cz')
-    #ansatz = PauliTwoDesign(num_qubits=Hamil.Qop.num_qubits)
+    #ansatz = PauliTwoDesign(num_qubits=Hamil_Qop.num_qubits)
     
+    print(ansatz)
     start_time_VQE=time.time()
     vqe = VQE(estimator, ansatz, optimizer,callback=store_intermediate_result)
 
@@ -387,7 +390,7 @@ if classical:#If 1, then convert back to classical Hamiltonian matrix and use nu
     end_time_SparsePauliOp_matrix=time.time()
     print(Hamil_Qop)
     print('Time for converting the classical matrix to Hamiltonian operator:')
-    print(start_time_SparsePauliOp_matrix-end_time_SparsePauliOp_matrix)
+    print(end_time_SparsePauliOp_matrix-start_time_SparsePauliOp_matrix)
 
 
     # #This scipy even just compute one eigenvalue is not faster than numpy solver for large scale matrix.
