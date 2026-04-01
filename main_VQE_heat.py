@@ -109,7 +109,7 @@ print(end_time_SparsePauliOp-start_time_SparsePauliOp)
 #setup classical optimizer
 #optimizer = optimizers.SPSA()
 #optimizer = optimizers.COBYLA() #quantum hardware results in the paper. 
-optimizer = optimizers.SLSQP() #most results in the paper
+optimizer = optimizers.SLSQP(maxiter=30) #most results in the paper
 #optimizer = optimizers.P_BFGS()
 #optimizer = optimizers.ADAM()
 print(optimizer)
